@@ -1,5 +1,7 @@
 {
     "board": "arduino:avr:uno",
     "programmer": "arduino:avrispmkii",
-    "sketch": "2IIC_new_simple\\2IIC_new_simple.ino"
+    "sketch": "2IIC_new_simple\\2IIC_new_simple.ino",
+    "port": "COM3",
+    "output": "./build"
 }

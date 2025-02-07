@@ -1,3 +1,5 @@
+#include <Arduino.h>
+#line 1 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino"
 #include <MLX90393.h>
 #include <SD.h>
 #include <SPI.h>
@@ -11,6 +13,11 @@ MLX90393::txyz data; // 创建一个包含四个浮点数 (t, x, y, z) 的结构
 unsigned long t;
 float x0, y0, z0, x, y, z;
 
+#line 14 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino"
+void setup();
+#line 38 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino"
+void loop();
+#line 14 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino"
 void setup()
 {
     Serial.begin(115200); // 初始化串口通信
@@ -56,3 +63,4 @@ void loop()
 
     delay(100); // 延时100毫秒
 }
+

@@ -1,9 +1,10 @@
-#include <MLX90393.h>
-#include <SD.h>
-#include <SPI.h>
-#include <Wire.h>
+# 1 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino"
+# 2 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino" 2
+# 3 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino" 2
+# 4 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino" 2
+# 5 "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\2IIC_new_simple.ino" 2
 
-#define TCAADDR 0x70 // TCA9548A多路IIC
+
 
 MLX90393 mlx;
 MLX90393::txyz data; // 创建一个包含四个浮点数 (t, x, y, z) 的结构
@@ -14,7 +15,7 @@ float x0, y0, z0, x, y, z;
 void setup()
 {
     Serial.begin(115200); // 初始化串口通信
-    Wire.begin();         // 初始化I2C总线
+    Wire.begin(); // 初始化I2C总线
 
     // 检查霍尔传感器是否正确启动
     while (mlx.begin() != MLX90393::STATUS_OK)
