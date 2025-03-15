@@ -1,5 +1,5 @@
 {
-  "additionalFiles": "",
+  "additionalFiles": "..\\..,..\\..\\..,..\\..\\..",
   "builtInLibrariesFolders": "E:\\Arduino\\libraries",
   "builtInToolsFolders": "E:\\Arduino\\tools-builder,E:\\Arduino\\hardware\\tools\\avr,C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages",
   "compiler.optimization_flags": "",

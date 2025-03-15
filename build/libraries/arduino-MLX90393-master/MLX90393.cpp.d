@@ -1,6 +1,6 @@
 e:\Repository\Magnetic-field-detection\build\libraries\arduino-MLX90393-master\MLX90393.cpp.o: \
- D:\ÎÄµµ\Arduino\libraries\arduino-MLX90393-master\MLX90393.cpp \
- D:\ÎÄµµ\Arduino\libraries\arduino-MLX90393-master/MLX90393.h \
+ E:\Arduino\libraries\arduino-MLX90393-master\MLX90393.cpp \
+ E:\Arduino\libraries\arduino-MLX90393-master/MLX90393.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\cores\arduino/Arduino.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\cores\arduino/binary.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\cores\arduino/WCharacter.h \

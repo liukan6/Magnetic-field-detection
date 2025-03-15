@@ -11,7 +11,7 @@ e:\Repository\Magnetic-field-detection\build\sketch\2IIC_new_simple.ino.cpp.o: \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\cores\arduino/USBAPI.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\cores\arduino/Arduino.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\variants\standard/pins_arduino.h \
- D:\ÎÄµµ\Arduino\libraries\arduino-MLX90393-master/MLX90393.h \
+ E:\Arduino\libraries\arduino-MLX90393-master/MLX90393.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\libraries\Wire\src/Wire.h \
  C:\Users\liukan\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6\cores\arduino/Stream.h \
  E:\Arduino\libraries\SD\src/SD.h \

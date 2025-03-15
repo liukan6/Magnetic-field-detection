@@ -9,7 +9,9 @@
             ],
             "intelliSenseMode": "windows-gcc-x64",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "E:/Arduino/libraries/**",
+                "E:/Arduino/hardware/arduino/avr/libraries/**"
             ],
             "forcedInclude": [],
             "cStandard": "${default}",
@@ -33,7 +35,7 @@
             "includePath": [
                 "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino",
                 "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard",
-                "D:\\文档\\Arduino\\libraries\\arduino-MLX90393-master",
+                "E:\\Arduino\\libraries\\arduino-MLX90393-master",
                 "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\Wire\\src",
                 "E:\\Arduino\\libraries\\SD\\src",
                 "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\SPI\\src",

@@ -1,0 +1,7 @@
+{
+    "board": "arduino:avr:mega",
+    "sketch": "2IIC_new_simple.ino",
+    "output": "./build",
+    "port": "COM4",
+    "configuration": "cpu=atmega2560"
+}

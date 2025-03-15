@@ -12,7 +12,7 @@
   {
     "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\build\\sketch\\2IIC_new_simple.ino.cpp",
     "Include": "MLX90393.h",
-    "Includepath": "D:\\文档\\Arduino\\libraries\\arduino-MLX90393-master"
+    "Includepath": "E:\\Arduino\\libraries\\arduino-MLX90393-master"
   },
   {
     "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\build\\sketch\\2IIC_new_simple.ino.cpp",
@@ -35,7 +35,7 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "D:\\文档\\Arduino\\libraries\\arduino-MLX90393-master\\MLX90393.cpp",
+    "Sourcefile": "E:\\Arduino\\libraries\\arduino-MLX90393-master\\MLX90393.cpp",
     "Include": "",
     "Includepath": null
   },

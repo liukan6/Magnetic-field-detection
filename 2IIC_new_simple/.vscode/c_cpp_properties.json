@@ -1,0 +1,56 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "windows-gcc-x64",
+            "compilerPath": "E:/MSYS2/ucrt64/bin/gcc.exe",
+            "compilerArgs": [
+                ""
+            ],
+            "intelliSenseMode": "gcc-x64",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "E:/Arduino/libraries/**"
+            ],
+            "forcedInclude": [],
+            "cStandard": "${default}",
+            "cppStandard": "${default}",
+            "defines": []
+        },
+        {
+            "name": "Arduino",
+            "compilerPath": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\avr-gcc\\7.3.0-atmel3.6.1-arduino7\\bin\\avr-g++",
+            "compilerArgs": [
+                "-w",
+                "-std=gnu++11",
+                "-fpermissive",
+                "-fno-exceptions",
+                "-ffunction-sections",
+                "-fdata-sections",
+                "-fno-threadsafe-statics",
+                "-Wno-error=narrowing"
+            ],
+            "intelliSenseMode": "gcc-x64",
+            "includePath": [
+                "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino",
+                "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\mega",
+                "E:\\Arduino\\libraries\\arduino-MLX90393-master",
+                "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\Wire\\src",
+                "E:\\Arduino\\libraries\\SD\\src",
+                "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\SPI\\src"
+            ],
+            "forcedInclude": [
+                "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino\\Arduino.h"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "defines": [
+                "F_CPU=16000000L",
+                "ARDUINO=10819",
+                "ARDUINO_AVR_MEGA2560",
+                "ARDUINO_ARCH_AVR",
+                "USBCON"
+            ]
+        }
+    ]
+}

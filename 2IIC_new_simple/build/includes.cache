@@ -1,0 +1,82 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\cores\\arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\mega"
+  },
+  {
+    "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\build\\sketch\\2IIC_new_simple.ino.cpp",
+    "Include": "MLX90393.h",
+    "Includepath": "E:\\Arduino\\libraries\\arduino-MLX90393-master"
+  },
+  {
+    "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\build\\sketch\\2IIC_new_simple.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\build\\sketch\\2IIC_new_simple.ino.cpp",
+    "Include": "SD.h",
+    "Includepath": "E:\\Arduino\\libraries\\SD\\src"
+  },
+  {
+    "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\build\\sketch\\2IIC_new_simple.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "e:\\Repository\\Magnetic-field-detection\\2IIC_new_simple\\build\\sketch\\2IIC_new_simple.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "E:\\Arduino\\libraries\\arduino-MLX90393-master\\MLX90393.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\Wire\\src\\utility\\twi.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "E:\\Arduino\\libraries\\SD\\src\\File.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "E:\\Arduino\\libraries\\SD\\src\\SD.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "E:\\Arduino\\libraries\\SD\\src\\utility\\Sd2Card.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "E:\\Arduino\\libraries\\SD\\src\\utility\\SdFile.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "E:\\Arduino\\libraries\\SD\\src\\utility\\SdVolume.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\liukan\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
