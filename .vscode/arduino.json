@@ -2,6 +2,6 @@
     "board": "arduino:avr:uno",
     "programmer": "arduino:avrispmkii",
     "sketch": "2IIC_new_simple\\2IIC_new_simple.ino",
-    "port": "COM5",
+    "port": "COM6",
     "output": "./build"
 }
