@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "2IIC_new_fast.ino",
+    "output": "./build",
+    "port": "COM5"
+}
