@@ -30,11 +30,11 @@ void setup()
     }
 
     /* ====================== ★ 极速配置 ====================== */
-    // mlx.setOverSampling(0);   // ★ 最低 OSR → 最快
-    // mlx.setGainSel(7);         // ★ 最低增益，避免饱和
-    // mlx.setResolution(0, 0, 0);    // ★ 最低分辨率 → 最快
-    // mlx.setDigitalFiltering(6);  // 极弱滤波
-    // mlx.setTemperatureOverSampling(6); // 极弱滤波
+    mlx.setOverSampling(0); // ★ 最低 OSR → 最快
+    mlx.setGainSel(7); // ★ 最低增益，避免饱和
+    mlx.setResolution(0, 0, 0); // ★ 最低分辨率 → 最快
+    mlx.setDigitalFiltering(5); // 5档为100Hz，6档为50Hz，7档约27Hz
+    mlx.setTemperatureOverSampling(5); // 极弱滤波
     /* ======================================================= */
 
 
@@ -75,7 +75,7 @@ void loop()
 
     // 若使用角度查表校准，可在此处替换 x0,y0,z0
     // 当前保持你原有逻辑
-    // x0 = 0; y0 = 0; z0 = 0;
+    x0 = 0; y0 = 0; z0 = 0;
 
     mlx.readData(data);
 

@@ -1,0 +1,6 @@
+{
+    "port": "COM8",
+    "board": "arduino:avr:mega",
+    "sketch": "2IIC_2MLX.ino",
+    "configuration": "cpu=atmega2560"
+}
