@@ -34,6 +34,14 @@ bool initMLX(uint8_t channel)
   {
     return false;
   }
+    /* ====================== ★ 极速配置 ====================== */
+    mlx.setOverSampling(0);   // ★ 最低 OSR → 最快
+    mlx.setGainSel(7);         // ★ 最低增益，避免饱和
+    mlx.setResolution(0, 0, 0);    // ★ 最低分辨率 → 最快
+    mlx.setDigitalFiltering(5);  // 5档为100Hz，6档为50Hz，7档约27Hz
+    mlx.setTemperatureOverSampling(5); // 极弱滤波
+    /* ======================================================= */
+
   return true;
 }
 
@@ -42,26 +50,37 @@ void setup()
 {
   Serial.begin(115200);
   Wire.begin();
+  Wire.setClock(400000);
   delay(100);
 
   // 初始化 SC0 (通道0)
-  if (!initMLX(0))
+  while (!initMLX(0))
   {
     Serial.println("MLX90393 on SC0 init failed!");
   }
+  
 
   // 初始化 SC1 (通道1)
-  if (!initMLX(1))
+  while (!initMLX(1))
   {
     Serial.println("MLX90393 on SC1 init failed!");
   }
 
   Serial.println("Init done.");
+
+  // S0 offset:
+  x0off=63.08; 
+  y0off=-90.37; 
+  z0off = 47.80;
+  // S1 offset:
+  x1off=63.23; 
+  y1off=-63.45; 
+  z1off=61.59; 
 }
 
-float dx = 40.38;
-float dy = 108.39;
-float dz = 63.20;
+float dx = 24.35;
+float dy = 81.47;
+float dz = 51.94;
 
 // float dx = 0;
 // float dy = 0;
@@ -74,7 +93,7 @@ void loop()
 {
   t = millis();
 
-  // ===== S0 =====
+  // ===== S0 =====左边的,作为纤毛
   tcaselect(0);
   delayMicroseconds(200);
   mlx.readData(data);
@@ -82,7 +101,7 @@ void loop()
   y0 = data.y-y0off;
   z0 = data.z-z0off;
 
-  // ===== S1 =====
+  // ===== S1 =====右边的,作为地磁
   tcaselect(1);
   delayMicroseconds(200);
   mlx.readData(data);
@@ -102,24 +121,25 @@ void loop()
 
   // ===== 输出 =====
   Serial.print(t);
-  Serial.print(" ms | ");
+  // Serial.print(" ms | ");
+  Serial.print("ms: ");
+  
+  // Serial.print("S0: ");
+  // Serial.print(x0); Serial.print(" ");
+  // Serial.print(y0); Serial.print(" ");
+  // Serial.print(z0);
 
-  Serial.print("S0: ");
-  Serial.print(x0); Serial.print(" ");
-  Serial.print(y0); Serial.print(" ");
-  Serial.print(z0);
+  // Serial.print(" || S1c: ");
+  // Serial.print(x1c); Serial.print(" ");
+  // Serial.print(y1c); Serial.print(" ");
+  // Serial.print(z1c);
 
-  Serial.print(" || S1c: ");
-  Serial.print(x1c); Serial.print(" ");
-  Serial.print(y1c); Serial.print(" ");
-  Serial.print(z1c);
-
-  Serial.print(" || Δ: ");
+  // Serial.print(" || Δ: ");
   Serial.print(dxs); Serial.print(" ");
   Serial.print(dys); Serial.print(" ");
   Serial.print(dzs);
 
   Serial.println();
 
-  delay(10);
+  // delay(10);
 }

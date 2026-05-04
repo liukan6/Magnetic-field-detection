@@ -94,12 +94,12 @@ void loop()
 
     Serial.println("=== Calibration Done ===");
 
-    Serial.println("S0 offset:");
+    Serial.println("// S0 offset:");
     Serial.print("x0off="); Serial.print(x0off); Serial.println("; ");
     Serial.print("y0off="); Serial.print(y0off); Serial.println("; ");
     Serial.print("z0off="); Serial.print(z0off); Serial.println("; ");
 
-    Serial.println("S1 offset:");
+    Serial.println("// S1 offset:");
     Serial.print("x1off="); Serial.print(x1off); Serial.println("; ");
     Serial.print("y1off="); Serial.print(y1off); Serial.println("; ");
     Serial.print("z1off="); Serial.print(z1off); Serial.println("; ");
