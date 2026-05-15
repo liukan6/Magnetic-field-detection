@@ -1,7 +1,8 @@
 #include <MLX90393.h>
 #include <Wire.h>
 
-#define TCAADDR 0x70  // TCA9548A地址
+#define TCAADDR 0x70
+#define LED_PIN 13   // Mega2560 板载LED
 
 MLX90393 mlx;
 MLX90393::txyz data;
@@ -18,7 +19,6 @@ float x1off, y1off, z1off;
 void tcaselect(uint8_t i)
 {
   if (i > 7) return;
-
   Wire.beginTransmission(TCAADDR);
   Wire.write(1 << i);
   Wire.endTransmission();
@@ -34,33 +34,50 @@ bool initMLX(uint8_t channel)
   {
     return false;
   }
-    /* ====================== ★ 极速配置 ====================== */
-    mlx.setOverSampling(0);   // ★ 最低 OSR → 最快
-    mlx.setGainSel(7);         // ★ 最低增益，避免饱和
-    mlx.setResolution(0, 0, 0);    // ★ 最低分辨率 → 最快
-    mlx.setDigitalFiltering(5);  // 5档为100Hz，6档为50Hz，7档约27Hz
-    mlx.setTemperatureOverSampling(5); // 极弱滤波
-    /* ======================================================= */
+
+  mlx.setOverSampling(0);
+  mlx.setGainSel(7);
+  mlx.setResolution(0, 0, 0);
+  mlx.setDigitalFiltering(5);
+  mlx.setTemperatureOverSampling(5);
 
   return true;
+}
+
+// -------------------- LED同步信号 --------------------
+void syncSignal()
+{
+  // LED亮
+  digitalWrite(LED_PIN, HIGH);
+
+  // 串口输出 → 触发TX灯闪
+  Serial.println("SYNC");
+
+  delay(100);  // 保证视频能拍到
+
+  digitalWrite(LED_PIN, LOW); //闪烁完之后亮的那下是开始
 }
 
 // -------------------- setup --------------------
 void setup()
 {
+  pinMode(LED_PIN, OUTPUT);
+
   Serial.begin(115200);
   Wire.begin();
   Wire.setClock(400000);
-  delay(100);
+  delay(1000);   // 等待串口稳定（关键！）
 
-  // 初始化 SC0 (通道0)
+  // ===== 同步信号 =====
+  syncSignal();
+
+  // 初始化 SC0
   while (!initMLX(0))
   {
     Serial.println("MLX90393 on SC0 init failed!");
   }
-  
 
-  // 初始化 SC1 (通道1)
+  // 初始化 SC1
   while (!initMLX(1))
   {
     Serial.println("MLX90393 on SC1 init failed!");
@@ -68,32 +85,25 @@ void setup()
 
   Serial.println("Init done.");
 
-  // S0 offset:
-  x0off=63.08; 
-  y0off=-90.37; 
-  z0off = 47.80;
-  // S1 offset:
-  x1off=63.23; 
-  y1off=-63.45; 
-  z1off=61.59; 
+  // Offset
+  x0off=63.08; y0off=-90.37; z0off=47.80;
+  x1off=63.23; y1off=-63.45; z1off=61.59;
 }
 
+// ===== 补偿参数 =====
 float dx = 24.35;
 float dy = 81.47;
 float dz = 51.94;
 
-// float dx = 0;
-// float dy = 0;
-// float dz = 0;
-
 float x1c, y1c, z1c;
 float dxs, dys, dzs;
 
+// -------------------- loop --------------------
 void loop()
 {
   t = millis();
 
-  // ===== S0 =====左边的,作为纤毛
+  // ===== S0 =====
   tcaselect(0);
   delayMicroseconds(200);
   mlx.readData(data);
@@ -101,7 +111,7 @@ void loop()
   y0 = data.y-y0off;
   z0 = data.z-z0off;
 
-  // ===== S1 =====右边的,作为地磁
+  // ===== S1 =====
   tcaselect(1);
   delayMicroseconds(200);
   mlx.readData(data);
@@ -109,7 +119,7 @@ void loop()
   y1 = data.y-y1off;
   z1 = data.z-z1off;
 
-  // ===== S1补偿 =====
+  // ===== 补偿 =====
   x1c = x1 - dx;
   y1c = y1 - dy;
   z1c = z1 - dz;
@@ -121,25 +131,9 @@ void loop()
 
   // ===== 输出 =====
   Serial.print(t);
-  // Serial.print(" ms | ");
   Serial.print("ms: ");
-  
-  // Serial.print("S0: ");
-  // Serial.print(x0); Serial.print(" ");
-  // Serial.print(y0); Serial.print(" ");
-  // Serial.print(z0);
-
-  // Serial.print(" || S1c: ");
-  // Serial.print(x1c); Serial.print(" ");
-  // Serial.print(y1c); Serial.print(" ");
-  // Serial.print(z1c);
-
-  // Serial.print(" || Δ: ");
   Serial.print(dxs); Serial.print(" ");
   Serial.print(dys); Serial.print(" ");
   Serial.print(dzs);
-
   Serial.println();
-
-  // delay(10);
 }
