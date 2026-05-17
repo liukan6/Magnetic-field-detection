@@ -35,7 +35,7 @@ from config import (
 )
 from maze_logic import build_wall_rects, clone_maze, create_random_maze
 from sensor_input import calibrate_sensor, open_serial_connection, parse_line
-from storage import add_leaderboard_record, delete_maze_at, load_saved_mazes, normalize_saved_mazes, rename_maze_at, save_maze_copy
+from storage import add_leaderboard_record, delete_leaderboard_entry, delete_maze_at, load_saved_mazes, normalize_saved_mazes, rename_maze_at, save_maze_copy
 from ui import (
     build_game_buttons,
     build_game_viewport,
@@ -49,6 +49,10 @@ from ui import (
     init_fonts,
     remap_point,
 )
+
+
+DOUBLE_CLICK_INTERVAL = 0.30
+DOUBLE_CLICK_DISTANCE = 6
 
 
 class MazeGameApp:
@@ -75,11 +79,25 @@ class MazeGameApp:
 
         self.saved_mazes = normalize_saved_mazes(load_saved_mazes())
         self.selected_saved_index = 0 if self.saved_mazes else None
+        self.saved_scroll = 0
+        self.leaderboard_scroll = 0
+        self.selected_leaderboard_index = None
+
+        self._last_click_time = 0.0
+        self._last_click_pos = (0, 0)
+        self._is_maximized = False
+        self._pre_maximize_size = None
 
         self.rows_setting = DEFAULT_MAZE_ROWS
         self.cols_setting = DEFAULT_MAZE_COLS
-        self.preview_maze = create_random_maze(self.rows_setting, self.cols_setting)
-        self.start_status = "Preview ready. Adjust size or load a saved maze."
+        if self.saved_mazes:
+            self.preview_maze = clone_maze(self.saved_mazes[0])
+            self.rows_setting = self.preview_maze.rows
+            self.cols_setting = self.preview_maze.cols
+            self.start_status = f"Loaded {self.preview_maze.name} as preview."
+        else:
+            self.preview_maze = create_random_maze(self.rows_setting, self.cols_setting)
+            self.start_status = "Preview ready. Adjust size or load a saved maze."
         self.player_name = "Player1"
         self.text_input_mode = None
         self.text_input_buffer = ""
@@ -110,6 +128,7 @@ class MazeGameApp:
         self.text_input_buffer = ""
         self.ime_preview_text = ""
         pygame.key.start_text_input()
+        pygame.key.set_repeat(400, 40)
         self.update_text_input_rect()
 
     def end_text_input(self):
@@ -118,12 +137,35 @@ class MazeGameApp:
         self.text_input_original_value = ""
         self.ime_preview_text = ""
         pygame.key.stop_text_input()
+        pygame.key.set_repeat(0, 0)
+
+    def _sync_player_name_from_buffer(self):
+        value = self.text_input_buffer.strip()
+        self.player_name = value or "Player1"
+        self.start_status = f"Player name set to {self.player_name}."
+
+    def _leaderboard_total(self):
+        if self.selected_saved_index is None or not self.saved_mazes:
+            return 0
+        if not (0 <= self.selected_saved_index < len(self.saved_mazes)):
+            return 0
+        return len(self.saved_mazes[self.selected_saved_index].leaderboard)
+
+    def _clamp_saved_scroll(self):
+        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
+        max_scroll = max(layout.saved_total_count - layout.saved_visible_count, 0)
+        self.saved_scroll = max(0, min(self.saved_scroll, max_scroll))
+
+    def _clamp_leaderboard_scroll(self):
+        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
+        max_scroll = max(layout.leaderboard_total_count - layout.leaderboard_visible_count, 0)
+        self.leaderboard_scroll = max(0, min(self.leaderboard_scroll, max_scroll))
 
     def update_text_input_rect(self):
         if self.text_input_mode is None:
             return
 
-        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes))
+        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
         if self.text_input_mode == "player_name":
             rect = layout.buttons["player_name"]
         else:
@@ -131,14 +173,17 @@ class MazeGameApp:
         pygame.key.set_text_input_rect(rect)
 
     def commit_text_input(self):
+        if self.text_input_mode == "player_name":
+            if self.text_input_buffer.strip():
+                self._sync_player_name_from_buffer()
+            self.end_text_input()
+            return
+
         value = self.text_input_buffer.strip()
         if not value:
             value = self.text_input_original_value.strip()
 
-        if self.text_input_mode == "player_name":
-            self.player_name = value or "Player1"
-            self.start_status = f"Player name set to {self.player_name}."
-        elif self.text_input_mode == "maze_name":
+        if self.text_input_mode == "maze_name":
             if self.selected_saved_index is None or not value:
                 self.start_status = "Maze rename cancelled."
             else:
@@ -272,6 +317,9 @@ class MazeGameApp:
             (index for index, maze in enumerate(self.saved_mazes) if maze.maze_id == saved_maze.maze_id),
             self.selected_saved_index,
         )
+        self.leaderboard_scroll = 0
+        self.selected_leaderboard_index = None
+        self._clamp_saved_scroll()
         self.start_status = f"Saved preview as {saved_maze.name}."
 
     def load_selected_saved_maze(self):
@@ -291,7 +339,35 @@ class MazeGameApp:
 
         self.saved_mazes, deleted_name = delete_maze_at(self.saved_mazes, self.selected_saved_index)
         self.selected_saved_index = 0 if self.saved_mazes else None
+        self.leaderboard_scroll = 0
+        self.selected_leaderboard_index = None
+        self._clamp_saved_scroll()
         self.start_status = f"Deleted {deleted_name}."
+
+    def delete_leaderboard_entry_at(self, entry_index):
+        if self.selected_saved_index is None or not self.saved_mazes:
+            self.start_status = "Select a saved maze first."
+            return
+        selected_maze = self.saved_mazes[self.selected_saved_index]
+        if not selected_maze.maze_id:
+            return
+        if entry_index is None or entry_index < 0 or entry_index >= len(selected_maze.leaderboard):
+            self.start_status = "Select a leaderboard record first."
+            return
+
+        removed = selected_maze.leaderboard[entry_index]
+        self.saved_mazes, updated_maze = delete_leaderboard_entry(
+            self.saved_mazes, selected_maze.maze_id, entry_index
+        )
+        if updated_maze is None:
+            return
+        if self.preview_maze.maze_id == updated_maze.maze_id:
+            self.preview_maze = clone_maze(updated_maze)
+        if self.current_maze is not None and self.current_maze.maze_id == updated_maze.maze_id:
+            self.current_maze = clone_maze(updated_maze)
+        self.selected_leaderboard_index = None
+        self._clamp_leaderboard_scroll()
+        self.start_status = f"Removed {removed['player']} {removed['time']:.2f}s from leaderboard."
 
     def save_current_game_maze(self):
         self.saved_mazes, saved_maze = save_maze_copy(self.saved_mazes, self.current_maze)
@@ -396,8 +472,61 @@ class MazeGameApp:
         if self.mode == "game" and self.current_maze is not None:
             self.rebuild_game_geometry(preserve_motion=True)
 
+    def toggle_maximize(self):
+        if self._is_maximized and self._pre_maximize_size is not None:
+            target_size = self._pre_maximize_size
+            self._is_maximized = False
+            self._pre_maximize_size = None
+        else:
+            info = pygame.display.Info()
+            screen_w = max(info.current_w, MIN_WIDTH)
+            screen_h = max(info.current_h, MIN_HEIGHT)
+            self._pre_maximize_size = (self.width, self.height)
+            target_size = (screen_w, screen_h)
+            self._is_maximized = True
+        self.screen = pygame.display.set_mode(target_size, self.display_flags)
+        self.resize_window(target_size[0], target_size[1])
+
+    def _click_hits_widget(self, pos):
+        if self.mode == "start":
+            layout = build_start_screen_layout(
+                self.width,
+                self.height,
+                len(self.saved_mazes),
+                self.saved_scroll,
+                self._leaderboard_total(),
+                self.leaderboard_scroll,
+            )
+            for rect in layout.buttons.values():
+                if rect.collidepoint(pos):
+                    return True
+            for _, rect in layout.saved_item_rects:
+                if rect.collidepoint(pos):
+                    return True
+            for _, rect in layout.leaderboard_item_rects:
+                if rect.collidepoint(pos):
+                    return True
+            if layout.saved_scrollbar is not None and layout.saved_scrollbar.collidepoint(pos):
+                return True
+            if layout.leaderboard_scrollbar is not None and layout.leaderboard_scrollbar.collidepoint(pos):
+                return True
+            return False
+
+        for rect in self.buttons.values():
+            if rect.collidepoint(pos):
+                return True
+        if self.win:
+            _, play_again, back_to_menu, close_game = build_victory_dialog_rects(self.width, self.height)
+            if play_again.collidepoint(pos) or back_to_menu.collidepoint(pos) or close_game.collidepoint(pos):
+                return True
+        return False
+
     def handle_start_click(self, mouse_pos):
-        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes))
+        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
+
+        if self.text_input_mode == "player_name" and not layout.buttons["player_name"].collidepoint(mouse_pos):
+            self.end_text_input()
+
         if self.selected_saved_index is not None and layout.buttons["maze_name"].collidepoint(mouse_pos):
             selected_maze = self.saved_mazes[self.selected_saved_index]
             self.begin_text_input("maze_name", selected_maze.name)
@@ -407,7 +536,14 @@ class MazeGameApp:
         for index, rect in layout.saved_item_rects:
             if rect.collidepoint(mouse_pos):
                 self.selected_saved_index = index
+                self.leaderboard_scroll = 0
+                self.selected_leaderboard_index = None
                 self.start_status = f"Selected saved maze: {self.saved_mazes[index].name}"
+                return
+
+        for absolute_index, rect in layout.leaderboard_item_rects:
+            if rect.collidepoint(mouse_pos):
+                self.selected_leaderboard_index = absolute_index
                 return
 
         buttons = layout.buttons
@@ -435,8 +571,23 @@ class MazeGameApp:
             self.load_selected_saved_maze()
         elif buttons["delete_saved"].collidepoint(mouse_pos):
             self.delete_selected_saved_maze()
+        elif buttons["delete_record"].collidepoint(mouse_pos):
+            self.delete_leaderboard_entry_at(self.selected_leaderboard_index)
         elif buttons["close"].collidepoint(mouse_pos):
             self.running = False
+
+    def handle_start_scroll(self, wheel_y):
+        if wheel_y == 0:
+            return
+        mouse_pos = pygame.mouse.get_pos()
+        layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
+
+        if layout.saved_panel.collidepoint(mouse_pos):
+            max_scroll = max(layout.saved_total_count - layout.saved_visible_count, 0)
+            self.saved_scroll = max(0, min(self.saved_scroll - wheel_y, max_scroll))
+        elif layout.leaderboard_panel.collidepoint(mouse_pos):
+            max_scroll = max(layout.leaderboard_total_count - layout.leaderboard_visible_count, 0)
+            self.leaderboard_scroll = max(0, min(self.leaderboard_scroll - wheel_y, max_scroll))
 
     def handle_game_click(self, mouse_pos):
         if self.win:
@@ -477,6 +628,8 @@ class MazeGameApp:
                 if self.text_input_mode is not None and event.text:
                     self.text_input_buffer += event.text
                     self.ime_preview_text = ""
+                    if self.text_input_mode == "player_name":
+                        self._sync_player_name_from_buffer()
             elif event.type == pygame.TEXTEDITING:
                 if self.text_input_mode is not None:
                     self.ime_preview_text = event.text
@@ -485,11 +638,17 @@ class MazeGameApp:
                     if event.key == pygame.K_RETURN:
                         self.commit_text_input()
                     elif event.key == pygame.K_ESCAPE:
-                        self.end_text_input()
-                        self.start_status = "Text edit cancelled."
+                        if self.text_input_mode == "player_name":
+                            self.end_text_input()
+                            self.start_status = f"Player name set to {self.player_name}."
+                        else:
+                            self.end_text_input()
+                            self.start_status = "Text edit cancelled."
                     elif event.key == pygame.K_BACKSPACE:
                         self.text_input_buffer = self.text_input_buffer[:-1]
                         self.ime_preview_text = ""
+                        if self.text_input_mode == "player_name":
+                            self._sync_player_name_from_buffer()
                     continue
 
                 if self.mode == "start":
@@ -539,10 +698,27 @@ class MazeGameApp:
                     elif event.key == pygame.K_ESCAPE:
                         self.running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                now = time.time()
+                is_double = (
+                    now - self._last_click_time <= DOUBLE_CLICK_INTERVAL
+                    and abs(event.pos[0] - self._last_click_pos[0]) <= DOUBLE_CLICK_DISTANCE
+                    and abs(event.pos[1] - self._last_click_pos[1]) <= DOUBLE_CLICK_DISTANCE
+                )
+                self._last_click_time = now
+                self._last_click_pos = event.pos
+
+                if is_double and not self._click_hits_widget(event.pos):
+                    self.toggle_maximize()
+                    self._last_click_time = 0.0
+                    continue
+
                 if self.mode == "start":
                     self.handle_start_click(event.pos)
                 else:
                     self.handle_game_click(event.pos)
+            elif event.type == pygame.MOUSEWHEEL:
+                if self.mode == "start":
+                    self.handle_start_scroll(event.y)
 
         if self.pending_resize is not None:
             resize_w, resize_h = self.pending_resize
@@ -631,6 +807,9 @@ class MazeGameApp:
                 self.text_input_buffer if self.text_input_mode == "maze_name" else "",
                 self.ime_preview_text,
                 self.text_input_original_value,
+                self.saved_scroll,
+                self.leaderboard_scroll,
+                self.selected_leaderboard_index,
             )
         else:
             self.walls = draw_game_screen(

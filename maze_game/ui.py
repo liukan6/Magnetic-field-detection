@@ -44,6 +44,15 @@ class StartScreenLayout:
     leaderboard_panel: pygame.Rect
     buttons: dict
     saved_item_rects: list
+    saved_scrollbar: pygame.Rect = None
+    saved_thumb: pygame.Rect = None
+    saved_visible_count: int = 0
+    saved_total_count: int = 0
+    leaderboard_item_rects: list = None
+    leaderboard_scrollbar: pygame.Rect = None
+    leaderboard_thumb: pygame.Rect = None
+    leaderboard_visible_count: int = 0
+    leaderboard_total_count: int = 0
 
 
 def init_fonts():
@@ -85,7 +94,7 @@ def build_game_buttons(width):
     return rects, labels
 
 
-def build_start_screen_layout(width, height, saved_count):
+def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leaderboard_total=0, leaderboard_scroll=0):
     panel_top = 92
     outer_margin = 24
     panel_gap = 16
@@ -117,6 +126,7 @@ def build_start_screen_layout(width, height, saved_count):
         "play": pygame.Rect(action_panel.x + 20, action_panel.y + 104, sidebar_width - 40, 40),
         "save_preview": pygame.Rect(action_panel.x + 20, action_panel.y + 154, sidebar_width - 40, 40),
         "maze_name": pygame.Rect(leaderboard_panel.x + 18, leaderboard_panel.y + 48, leaderboard_panel.width - 36, 36),
+        "delete_record": pygame.Rect(leaderboard_panel.x + 20, leaderboard_panel.bottom - 42, leaderboard_panel.width - 40, 34),
         "load_saved": pygame.Rect(saved_panel.x + 20, saved_panel.bottom - 82, sidebar_width - 40, 34),
         "delete_saved": pygame.Rect(saved_panel.x + 20, saved_panel.bottom - 42, sidebar_width - 40, 34),
         "close": pygame.Rect(width - 178, 18, 140, 38),
@@ -125,13 +135,76 @@ def build_start_screen_layout(width, height, saved_count):
     buttons["delete_saved"].width = saved_panel.width - 40
 
     saved_item_rects = []
-    item_y = saved_panel.y + 52
-    item_height = 34
-    visible_count = max((saved_panel.height - 130) // 40, 0)
+    saved_item_top = saved_panel.y + 52
+    saved_item_height = 34
+    saved_item_step = 40
+    saved_items_bottom = saved_panel.bottom - 96
+    saved_visible = max((saved_items_bottom - saved_item_top) // saved_item_step, 0)
+    saved_total = saved_count
 
-    for index in range(min(saved_count, visible_count)):
-        rect = pygame.Rect(saved_panel.x + 16, item_y + index * 40, saved_panel.width - 32, item_height)
-        saved_item_rects.append((index, rect))
+    saved_needs_bar = saved_total > saved_visible and saved_visible > 0
+    saved_scrollbar = None
+    saved_thumb = None
+
+    saved_row_left = saved_panel.x + 16
+    saved_row_width = saved_panel.width - 32
+    if saved_needs_bar:
+        saved_row_width -= 16
+
+    saved_max_scroll = max(saved_total - saved_visible, 0)
+    clamped_saved_scroll = max(0, min(saved_scroll, saved_max_scroll))
+
+    for i in range(min(saved_total - clamped_saved_scroll, saved_visible)):
+        absolute_index = clamped_saved_scroll + i
+        rect = pygame.Rect(saved_row_left, saved_item_top + i * saved_item_step, saved_row_width, saved_item_height)
+        saved_item_rects.append((absolute_index, rect))
+
+    if saved_needs_bar:
+        track_x = saved_panel.right - 18
+        track_y = saved_item_top
+        track_h = saved_visible * saved_item_step - (saved_item_step - saved_item_height)
+        saved_scrollbar = pygame.Rect(track_x, track_y, 8, track_h)
+        thumb_h = max(int(track_h * saved_visible / saved_total), 24)
+        thumb_h = min(thumb_h, track_h)
+        if saved_max_scroll > 0:
+            thumb_y = track_y + int((track_h - thumb_h) * clamped_saved_scroll / saved_max_scroll)
+        else:
+            thumb_y = track_y
+        saved_thumb = pygame.Rect(track_x, thumb_y, 8, thumb_h)
+
+    leaderboard_item_rects = []
+    leaderboard_scrollbar = None
+    leaderboard_thumb = None
+    leaderboard_item_top = leaderboard_panel.y + 124
+    leaderboard_item_step = 38
+    leaderboard_visible = max((leaderboard_panel.bottom - 56 - leaderboard_item_top) // leaderboard_item_step, 0)
+    leaderboard_needs_bar = leaderboard_total > leaderboard_visible and leaderboard_visible > 0
+
+    lb_row_left = leaderboard_panel.x + 18
+    lb_row_width = leaderboard_panel.width - 36
+    if leaderboard_needs_bar:
+        lb_row_width -= 16
+
+    leaderboard_max_scroll = max(leaderboard_total - leaderboard_visible, 0)
+    clamped_lb_scroll = max(0, min(leaderboard_scroll, leaderboard_max_scroll))
+
+    for i in range(min(leaderboard_total - clamped_lb_scroll, leaderboard_visible)):
+        absolute_index = clamped_lb_scroll + i
+        rect = pygame.Rect(lb_row_left, leaderboard_item_top + i * leaderboard_item_step, lb_row_width, leaderboard_item_step - 4)
+        leaderboard_item_rects.append((absolute_index, rect))
+
+    if leaderboard_needs_bar:
+        track_x = leaderboard_panel.right - 20
+        track_y = leaderboard_item_top
+        track_h = leaderboard_visible * leaderboard_item_step
+        leaderboard_scrollbar = pygame.Rect(track_x, track_y, 8, track_h)
+        thumb_h = max(int(track_h * leaderboard_visible / leaderboard_total), 24)
+        thumb_h = min(thumb_h, track_h)
+        if leaderboard_max_scroll > 0:
+            thumb_y = track_y + int((track_h - thumb_h) * clamped_lb_scroll / leaderboard_max_scroll)
+        else:
+            thumb_y = track_y
+        leaderboard_thumb = pygame.Rect(track_x, thumb_y, 8, thumb_h)
 
     return StartScreenLayout(
         preview_panel=preview_panel,
@@ -142,6 +215,15 @@ def build_start_screen_layout(width, height, saved_count):
         leaderboard_panel=leaderboard_panel,
         buttons=buttons,
         saved_item_rects=saved_item_rects,
+        saved_scrollbar=saved_scrollbar,
+        saved_thumb=saved_thumb,
+        saved_visible_count=saved_visible,
+        saved_total_count=saved_total,
+        leaderboard_item_rects=leaderboard_item_rects,
+        leaderboard_scrollbar=leaderboard_scrollbar,
+        leaderboard_thumb=leaderboard_thumb,
+        leaderboard_visible_count=leaderboard_visible,
+        leaderboard_total_count=leaderboard_total,
     )
 
 
@@ -341,13 +423,25 @@ def draw_start_screen(
     maze_name_text,
     ime_preview_text,
     original_input_value,
+    saved_scroll=0,
+    leaderboard_scroll=0,
+    selected_leaderboard_index=None,
 ):
     screen.fill(BG)
 
-    layout = build_start_screen_layout(width, height, len(saved_mazes))
     selected_maze = None
     if selected_saved_index is not None and 0 <= selected_saved_index < len(saved_mazes):
         selected_maze = saved_mazes[selected_saved_index]
+
+    leaderboard_total = len(selected_maze.leaderboard) if selected_maze else 0
+    layout = build_start_screen_layout(
+        width,
+        height,
+        len(saved_mazes),
+        saved_scroll=saved_scroll,
+        leaderboard_total=leaderboard_total,
+        leaderboard_scroll=leaderboard_scroll,
+    )
 
     title = fonts["title"].render("Magnetic Maze Setup", True, TEXT)
     subtitle = fonts["status"].render(
@@ -401,7 +495,7 @@ def draw_start_screen(
         ime_preview_text if editing_player_name else "",
     )
     if editing_player_name:
-        player_hint_text = "Press Enter to confirm, Esc to cancel."
+        player_hint_text = "Typing is saved automatically. Press Esc or click away to finish."
     else:
         player_hint_text = "A saved maze records your time under this player name."
     player_hint = fonts["small"].render(player_hint_text, True, STATUS_INFO)
@@ -448,6 +542,12 @@ def draw_start_screen(
             screen.blit(text_surface, (rect.x + 10, rect.y + 7))
             screen.blit(meta_surface, (rect.right - 70, rect.y + 7))
 
+        if layout.saved_scrollbar is not None:
+            pygame.draw.rect(screen, PANEL, layout.saved_scrollbar, border_radius=4)
+            pygame.draw.rect(screen, GRID, layout.saved_scrollbar, width=1, border_radius=4)
+            if layout.saved_thumb is not None:
+                pygame.draw.rect(screen, BUTTON_HOVER, layout.saved_thumb, border_radius=4)
+
     if selected_maze is None:
         leaderboard_empty = fonts["small"].render("Select a saved maze to see its best times.", True, STATUS_INFO)
         rename_hint = fonts["small"].render("Tip: press F2 to rename the selected saved maze.", True, STATUS_INFO)
@@ -476,14 +576,34 @@ def draw_start_screen(
             screen.blit(no_record, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 126))
             screen.blit(record_tip, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 156))
         else:
-            for rank, item in enumerate(selected_maze.leaderboard[:8], start=1):
+            for absolute_index, rect in layout.leaderboard_item_rects:
+                item = selected_maze.leaderboard[absolute_index]
+                rank = absolute_index + 1
+                is_selected = absolute_index == selected_leaderboard_index
+                if is_selected:
+                    pygame.draw.rect(screen, BUTTON_HOVER, rect, border_radius=8)
+                line_color = BUTTON_TEXT if is_selected else TEXT
+                ts_color = BUTTON_TEXT if is_selected else STATUS_INFO
                 line = f"{rank}. {item['player']}  {item['time']:.2f}s"
                 timestamp = item.get("timestamp", "")
-                line_surface = fonts["small"].render(trim_center_label(line, 40), True, TEXT)
-                ts_surface = fonts["small"].render(timestamp, True, STATUS_INFO)
-                y = layout.leaderboard_panel.y + 124 + (rank - 1) * 38
-                screen.blit(line_surface, (layout.leaderboard_panel.x + 18, y))
-                screen.blit(ts_surface, (layout.leaderboard_panel.x + 18, y + 18))
+                line_surface = fonts["small"].render(trim_center_label(line, 36), True, line_color)
+                ts_surface = fonts["small"].render(timestamp, True, ts_color)
+                screen.blit(line_surface, (rect.x + 6, rect.y))
+                screen.blit(ts_surface, (rect.x + 6, rect.y + 18))
+
+            if layout.leaderboard_scrollbar is not None:
+                pygame.draw.rect(screen, PANEL, layout.leaderboard_scrollbar, border_radius=4)
+                pygame.draw.rect(screen, GRID, layout.leaderboard_scrollbar, width=1, border_radius=4)
+                if layout.leaderboard_thumb is not None:
+                    pygame.draw.rect(screen, BUTTON_HOVER, layout.leaderboard_thumb, border_radius=4)
+
+        draw_button(
+            screen,
+            layout.buttons["delete_record"],
+            "Delete Selected Record",
+            layout.buttons["delete_record"].collidepoint(mouse_pos),
+            fonts,
+        )
 
     footer = fonts["status"].render(status_message, True, STATUS_INFO)
     screen.blit(footer, (24, height - 28))

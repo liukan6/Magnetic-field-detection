@@ -157,3 +157,27 @@ def add_leaderboard_record(mazes, maze_id, player_name, elapsed_time):
         break
 
     return updated, changed_maze
+
+
+def delete_leaderboard_entry(mazes, maze_id, entry_index):
+    if not maze_id:
+        return list(mazes), None
+
+    updated = list(mazes)
+    changed_maze = None
+
+    for index, maze in enumerate(updated):
+        if maze.maze_id != maze_id:
+            continue
+
+        if entry_index < 0 or entry_index >= len(maze.leaderboard):
+            return updated, None
+
+        changed_maze = clone_maze(maze)
+        changed_maze.leaderboard = list(changed_maze.leaderboard)
+        changed_maze.leaderboard.pop(entry_index)
+        updated[index] = changed_maze
+        write_saved_mazes(updated)
+        break
+
+    return updated, changed_maze
