@@ -127,18 +127,16 @@ def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leader
         "save_preview": pygame.Rect(action_panel.x + 20, action_panel.y + 154, sidebar_width - 40, 40),
         "maze_name": pygame.Rect(leaderboard_panel.x + 18, leaderboard_panel.y + 48, leaderboard_panel.width - 36, 36),
         "delete_record": pygame.Rect(leaderboard_panel.x + 20, leaderboard_panel.bottom - 42, leaderboard_panel.width - 40, 34),
-        "load_saved": pygame.Rect(saved_panel.x + 20, saved_panel.bottom - 82, sidebar_width - 40, 34),
         "delete_saved": pygame.Rect(saved_panel.x + 20, saved_panel.bottom - 42, sidebar_width - 40, 34),
         "close": pygame.Rect(width - 178, 18, 140, 38),
     }
-    buttons["load_saved"].width = saved_panel.width - 40
     buttons["delete_saved"].width = saved_panel.width - 40
 
     saved_item_rects = []
     saved_item_top = saved_panel.y + 52
     saved_item_height = 34
     saved_item_step = 40
-    saved_items_bottom = saved_panel.bottom - 96
+    saved_items_bottom = saved_panel.bottom - 56
     saved_visible = max((saved_items_bottom - saved_item_top) // saved_item_step, 0)
     saved_total = saved_count
 
@@ -523,7 +521,6 @@ def draw_start_screen(
     draw_button(screen, layout.buttons["generate"], "Generate Random Maze", layout.buttons["generate"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["play"], "Play Selected Maze", layout.buttons["play"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["save_preview"], "Save Preview Maze", layout.buttons["save_preview"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["load_saved"], "Load Highlighted Maze", layout.buttons["load_saved"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["delete_saved"], "Delete Highlighted Maze", layout.buttons["delete_saved"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["close"], "Close", layout.buttons["close"].collidepoint(mouse_pos), fonts)
 
@@ -619,9 +616,9 @@ def draw_game_screen(screen, fonts, width, height, buttons, labels, maze, viewpo
     for name, rect in buttons.items():
         draw_button(screen, rect, labels[name], rect.collidepoint(mouse_pos), fonts)
 
-    app_title = fonts["status"].render("Magnetic Maze Control", True, TEXT)
-    app_title_rect = app_title.get_rect(center=(width // 2, TOP_BAR_HEIGHT // 2 + 1))
-    screen.blit(app_title, app_title_rect)
+    # app_title = fonts["status"].render("Magnetic Maze Control", True, TEXT)
+    # app_title_rect = app_title.get_rect(center=(width // 2, TOP_BAR_HEIGHT // 2 + 1))
+    # screen.blit(app_title, app_title_rect)
 
     draw_data_panel(
         screen,

@@ -1,5 +1,7 @@
 import os
 import time
+import ctypes
+import platform
 
 os.environ.setdefault("SDL_IME_SHOW_UI", "1")
 
@@ -472,7 +474,34 @@ class MazeGameApp:
         if self.mode == "game" and self.current_maze is not None:
             self.rebuild_game_geometry(preserve_motion=True)
 
+    def _get_window_handle(self):
+        if platform.system() != "Windows":
+            return None
+        try:
+            wm_info = pygame.display.get_wm_info()
+            return wm_info.get("window")
+        except Exception:
+            return None
+
     def toggle_maximize(self):
+        hwnd = self._get_window_handle()
+        if hwnd:
+            SW_RESTORE = 9
+            SW_MAXIMIZE = 3
+            user32 = ctypes.windll.user32
+            if self._is_maximized:
+                user32.ShowWindow(hwnd, SW_RESTORE)
+                self._is_maximized = False
+            else:
+                user32.ShowWindow(hwnd, SW_MAXIMIZE)
+                self._is_maximized = True
+            new_surface = pygame.display.get_surface()
+            if new_surface is not None:
+                self.width, self.height = new_surface.get_size()
+                self.screen = new_surface
+                self.resize_window(self.width, self.height)
+            return
+
         if self._is_maximized and self._pre_maximize_size is not None:
             target_size = self._pre_maximize_size
             self._is_maximized = False
@@ -538,7 +567,10 @@ class MazeGameApp:
                 self.selected_saved_index = index
                 self.leaderboard_scroll = 0
                 self.selected_leaderboard_index = None
-                self.start_status = f"Selected saved maze: {self.saved_mazes[index].name}"
+                self.preview_maze = clone_maze(self.saved_mazes[index])
+                self.rows_setting = self.preview_maze.rows
+                self.cols_setting = self.preview_maze.cols
+                self.start_status = f"Loaded {self.preview_maze.name} into preview."
                 return
 
         for absolute_index, rect in layout.leaderboard_item_rects:
@@ -567,8 +599,6 @@ class MazeGameApp:
             self.start_game()
         elif buttons["save_preview"].collidepoint(mouse_pos):
             self.save_preview_maze()
-        elif buttons["load_saved"].collidepoint(mouse_pos):
-            self.load_selected_saved_maze()
         elif buttons["delete_saved"].collidepoint(mouse_pos):
             self.delete_selected_saved_maze()
         elif buttons["delete_record"].collidepoint(mouse_pos):
@@ -624,6 +654,10 @@ class MazeGameApp:
                 self.running = False
             elif event.type == pygame.VIDEORESIZE:
                 self.pending_resize = (event.w, event.h)
+            elif event.type == getattr(pygame, "WINDOWMAXIMIZED", -1):
+                self._is_maximized = True
+            elif event.type == getattr(pygame, "WINDOWRESTORED", -2):
+                self._is_maximized = False
             elif event.type == pygame.TEXTINPUT:
                 if self.text_input_mode is not None and event.text:
                     self.text_input_buffer += event.text
@@ -716,6 +750,8 @@ class MazeGameApp:
                     self.handle_start_click(event.pos)
                 else:
                     self.handle_game_click(event.pos)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                self.toggle_maximize()
             elif event.type == pygame.MOUSEWHEEL:
                 if self.mode == "start":
                     self.handle_start_scroll(event.y)
