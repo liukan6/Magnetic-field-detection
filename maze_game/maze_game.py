@@ -42,6 +42,7 @@ from ui import (
     build_game_buttons,
     build_game_viewport,
     build_goal_rect,
+    build_player_dropdown_rects,
     build_start_screen_layout,
     build_victory_dialog_rects,
     cell_center,
@@ -90,6 +91,8 @@ class MazeGameApp:
         self._is_maximized = False
         self._pre_maximize_size = None
 
+        self.player_dropdown_open = False
+
         self.rows_setting = DEFAULT_MAZE_ROWS
         self.cols_setting = DEFAULT_MAZE_COLS
         if self.saved_mazes:
@@ -100,7 +103,7 @@ class MazeGameApp:
         else:
             self.preview_maze = create_random_maze(self.rows_setting, self.cols_setting)
             self.start_status = "Preview ready. Adjust size or load a saved maze."
-        self.player_name = "Player1"
+        self.player_name = "取消实验课学分折半计算制度!"
         self.text_input_mode = None
         self.text_input_buffer = ""
         self.text_input_original_value = ""
@@ -143,7 +146,7 @@ class MazeGameApp:
 
     def _sync_player_name_from_buffer(self):
         value = self.text_input_buffer.strip()
-        self.player_name = value or "Player1"
+        self.player_name = value or "取消实验课学分折半计算制度!"
         self.start_status = f"Player name set to {self.player_name}."
 
     def _leaderboard_total(self):
@@ -152,6 +155,18 @@ class MazeGameApp:
         if not (0 <= self.selected_saved_index < len(self.saved_mazes)):
             return 0
         return len(self.saved_mazes[self.selected_saved_index].leaderboard)
+
+    def _collect_known_players(self):
+        seen = []
+        seen_set = set()
+        for maze in self.saved_mazes:
+            for entry in maze.leaderboard:
+                name = entry.get("player", "").strip()
+                if name and name not in seen_set:
+                    seen.append(name)
+                    seen_set.add(name)
+        seen.sort(key=lambda n: (n != self.player_name, n.lower()))
+        return seen
 
     def _clamp_saved_scroll(self):
         layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
@@ -301,6 +316,7 @@ class MazeGameApp:
         self.game_status_color = STATUS_OK
 
     def start_game(self):
+        self.player_dropdown_open = False
         self.apply_current_maze(
             self.preview_maze,
             INITIAL_CALIBRATION_DURATION,
@@ -429,7 +445,7 @@ class MazeGameApp:
             self.game_status_color = STATUS_WARN
             return
 
-        player_name = self.player_name.strip() or "Player1"
+        player_name = self.player_name.strip() or "取消实验课学分折半计算制度!"
         self.saved_mazes, updated_maze = add_leaderboard_record(
             self.saved_mazes,
             self.current_maze.maze_id,
@@ -539,6 +555,11 @@ class MazeGameApp:
                 return True
             if layout.leaderboard_scrollbar is not None and layout.leaderboard_scrollbar.collidepoint(pos):
                 return True
+            if self.player_dropdown_open:
+                known_players = self._collect_known_players()
+                panel_rect, _ = build_player_dropdown_rects(layout, len(known_players))
+                if panel_rect is not None and panel_rect.collidepoint(pos):
+                    return True
             return False
 
         for rect in self.buttons.values():
@@ -552,6 +573,26 @@ class MazeGameApp:
 
     def handle_start_click(self, mouse_pos):
         layout = build_start_screen_layout(self.width, self.height, len(self.saved_mazes), self.saved_scroll, self._leaderboard_total(), self.leaderboard_scroll)
+
+        if self.player_dropdown_open:
+            known_players = self._collect_known_players()
+            _, item_rects = build_player_dropdown_rects(layout, len(known_players))
+            for rect, name in zip(item_rects, known_players):
+                if rect.collidepoint(mouse_pos):
+                    if self.text_input_mode == "player_name":
+                        self.end_text_input()
+                    self.player_name = name
+                    self.start_status = f"Player name set to {self.player_name}."
+                    self.player_dropdown_open = False
+                    return
+            if not layout.buttons["player_name_dropdown"].collidepoint(mouse_pos):
+                self.player_dropdown_open = False
+
+        if layout.buttons["player_name_dropdown"].collidepoint(mouse_pos):
+            if self.text_input_mode == "player_name":
+                self.end_text_input()
+            self.player_dropdown_open = not self.player_dropdown_open
+            return
 
         if self.text_input_mode == "player_name" and not layout.buttons["player_name"].collidepoint(mouse_pos):
             self.end_text_input()
@@ -580,6 +621,7 @@ class MazeGameApp:
 
         buttons = layout.buttons
         if buttons["player_name"].collidepoint(mouse_pos):
+            self.player_dropdown_open = False
             self.begin_text_input("player_name", self.player_name)
         elif buttons["rows_minus"].collidepoint(mouse_pos):
             self.rows_setting = max(self.rows_setting - 1, MIN_MAZE_ROWS)
@@ -846,6 +888,8 @@ class MazeGameApp:
                 self.saved_scroll,
                 self.leaderboard_scroll,
                 self.selected_leaderboard_index,
+                self.player_dropdown_open,
+                self._collect_known_players(),
             )
         else:
             self.walls = draw_game_screen(

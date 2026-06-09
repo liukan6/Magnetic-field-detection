@@ -121,7 +121,8 @@ def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leader
         "rows_plus": pygame.Rect(size_panel.x + 214, size_panel.y + 84, 44, 34),
         "cols_minus": pygame.Rect(size_panel.x + 24, size_panel.y + 122, 44, 34),
         "cols_plus": pygame.Rect(size_panel.x + 214, size_panel.y + 122, 44, 34),
-        "player_name": pygame.Rect(player_panel.x + 20, player_panel.y + 42, sidebar_width - 40, 34),
+        "player_name": pygame.Rect(player_panel.x + 20, player_panel.y + 42, sidebar_width - 40 - 42, 34),
+        "player_name_dropdown": pygame.Rect(player_panel.x + 20 + sidebar_width - 40 - 36, player_panel.y + 42, 36, 34),
         "generate": pygame.Rect(action_panel.x + 20, action_panel.y + 54, sidebar_width - 40, 40),
         "play": pygame.Rect(action_panel.x + 20, action_panel.y + 104, sidebar_width - 40, 40),
         "save_preview": pygame.Rect(action_panel.x + 20, action_panel.y + 154, sidebar_width - 40, 40),
@@ -223,6 +224,24 @@ def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leader
         leaderboard_visible_count=leaderboard_visible,
         leaderboard_total_count=leaderboard_total,
     )
+
+
+def build_player_dropdown_rects(layout, item_count, max_visible=8):
+    if item_count <= 0:
+        return None, []
+    visible = min(item_count, max_visible)
+    input_rect = layout.buttons["player_name"]
+    dropdown_rect = layout.buttons["player_name_dropdown"]
+    panel_x = input_rect.x
+    panel_y = input_rect.bottom + 4
+    panel_w = dropdown_rect.right - input_rect.x
+    item_h = 30
+    panel_h = visible * item_h + 8
+    panel = pygame.Rect(panel_x, panel_y, panel_w, panel_h)
+    item_rects = []
+    for i in range(visible):
+        item_rects.append(pygame.Rect(panel_x + 4, panel_y + 4 + i * item_h, panel_w - 8, item_h))
+    return panel, item_rects
 
 
 def build_game_viewport(width, height, rows, cols):
@@ -424,6 +443,8 @@ def draw_start_screen(
     saved_scroll=0,
     leaderboard_scroll=0,
     selected_leaderboard_index=None,
+    player_dropdown_open=False,
+    player_dropdown_items=None,
 ):
     screen.fill(BG)
 
@@ -449,12 +470,12 @@ def draw_start_screen(
     )
 
     intro_line1 = fonts["small"].render(
-        "游戏玩法：通过倾斜磁场传感器控制小球移动，将小球引导至绿色终点。",
+        "游戏玩法：通过轻推磁纤毛控制小球移动（类似操控杆），将小球引导至绿色终点。",
         True,
         STATUS_INFO,
     )
     intro_line2 = fonts["small"].render(
-        "每个迷宫会记录你的最佳成绩到排行榜。点击 Saved Mazes 中的迷宫即可加载。",
+        "输入玩家姓名，每个迷宫会记录你的最佳成绩到排行榜。点击 Saved Mazes 中的迷宫即可加载。",
         True,
         STATUS_INFO,
     )
@@ -506,6 +527,15 @@ def draw_start_screen(
         fonts,
         ime_preview_text if editing_player_name else "",
     )
+
+    dropdown_btn = layout.buttons["player_name_dropdown"]
+    dropdown_hover = dropdown_btn.collidepoint(mouse_pos)
+    dropdown_fill = BUTTON_HOVER if (dropdown_hover or player_dropdown_open) else PANEL
+    pygame.draw.rect(screen, dropdown_fill, dropdown_btn, border_radius=10)
+    pygame.draw.rect(screen, GRID, dropdown_btn, width=1, border_radius=10)
+    arrow_glyph = "▲" if player_dropdown_open else "▼"
+    arrow_surface = fonts["small"].render(arrow_glyph, True, BUTTON_TEXT)
+    screen.blit(arrow_surface, arrow_surface.get_rect(center=dropdown_btn.center))
     if editing_player_name:
         player_hint_text = "Typing is saved automatically. Press Esc or click away to finish."
     else:
@@ -618,6 +648,35 @@ def draw_start_screen(
 
     footer = fonts["status"].render(status_message, True, STATUS_INFO)
     screen.blit(footer, (24, height - 28))
+
+    if player_dropdown_open:
+        items = player_dropdown_items or []
+        panel_rect, item_rects = build_player_dropdown_rects(layout, len(items))
+        if panel_rect is None:
+            empty_rect = pygame.Rect(
+                layout.buttons["player_name"].x,
+                layout.buttons["player_name"].bottom + 4,
+                layout.buttons["player_name_dropdown"].right - layout.buttons["player_name"].x,
+                34,
+            )
+            pygame.draw.rect(screen, PANEL_ALT, empty_rect, border_radius=10)
+            pygame.draw.rect(screen, GRID, empty_rect, width=1, border_radius=10)
+            empty_text = fonts["small"].render("暂无历史玩家名", True, STATUS_INFO)
+            screen.blit(empty_text, empty_text.get_rect(center=empty_rect.center))
+        else:
+            pygame.draw.rect(screen, PANEL_ALT, panel_rect, border_radius=10)
+            pygame.draw.rect(screen, GRID, panel_rect, width=1, border_radius=10)
+            for rect, name in zip(item_rects, items):
+                hovered = rect.collidepoint(mouse_pos)
+                is_current = name == player_name
+                if hovered:
+                    pygame.draw.rect(screen, BUTTON_HOVER, rect, border_radius=6)
+                elif is_current:
+                    pygame.draw.rect(screen, BUTTON, rect, border_radius=6)
+                color = BUTTON_TEXT if (hovered or is_current) else TEXT
+                label_surface = fonts["small"].render(trim_center_label(name, 28), True, color)
+                screen.blit(label_surface, (rect.x + 8, rect.y + 5))
+
     return layout
 
 
