@@ -95,7 +95,7 @@ def build_game_buttons(width):
 
 
 def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leaderboard_total=0, leaderboard_scroll=0):
-    panel_top = 92
+    panel_top = 130
     outer_margin = 24
     panel_gap = 16
     preview_width = int(width * 0.52)
@@ -447,8 +447,22 @@ def draw_start_screen(
         True,
         STATUS_INFO,
     )
+
+    intro_line1 = fonts["small"].render(
+        "游戏玩法：通过倾斜磁场传感器控制小球移动，将小球引导至绿色终点。",
+        True,
+        STATUS_INFO,
+    )
+    intro_line2 = fonts["small"].render(
+        "每个迷宫会记录你的最佳成绩到排行榜。点击 Saved Mazes 中的迷宫即可加载。",
+        True,
+        STATUS_INFO,
+    )
+
     screen.blit(title, (24, 22))
     screen.blit(subtitle, (24, 58))
+    screen.blit(intro_line1, (24, 82))
+    screen.blit(intro_line2, (24, 104))
 
     pygame.draw.rect(screen, PANEL_ALT, layout.preview_panel, border_radius=18)
     pygame.draw.rect(screen, GRID, layout.preview_panel, width=2, border_radius=18)
