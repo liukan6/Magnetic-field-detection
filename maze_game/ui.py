@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import pygame
 
 from config import (
+    ACCENT,
+    ACCENT_HOVER,
     BALL,
     BALL_RADIUS,
     BG,
@@ -95,7 +97,7 @@ def build_game_buttons(width):
 
 
 def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leaderboard_total=0, leaderboard_scroll=0):
-    panel_top = 130
+    panel_top = 152
     outer_margin = 24
     panel_gap = 16
     preview_width = int(width * 0.52)
@@ -311,10 +313,20 @@ def trim_center_label(text, max_length=34):
     return text[: max_length - 3] + "..."
 
 
-def draw_button(screen, rect, label, hovered, fonts):
-    color = BUTTON_HOVER if hovered else BUTTON
+def draw_button(screen, rect, label, hovered, fonts, highlight=False):
+    if highlight:
+        color = ACCENT_HOVER if hovered else ACCENT
+        text_color = BUTTON_TEXT
+        border_color = ACCENT_HOVER
+        border_width = 2
+    else:
+        color = BUTTON_HOVER if hovered else BUTTON
+        text_color = BUTTON_TEXT if hovered else TEXT
+        border_color = GRID
+        border_width = 1
     pygame.draw.rect(screen, color, rect, border_radius=10)
-    text_surface = fonts["button"].render(label, True, BUTTON_TEXT)
+    pygame.draw.rect(screen, border_color, rect, width=border_width, border_radius=10)
+    text_surface = fonts["button"].render(label, True, text_color)
     text_rect = text_surface.get_rect(center=rect.center)
     screen.blit(text_surface, text_rect)
 
@@ -347,7 +359,7 @@ def draw_input_box(screen, rect, text, active, placeholder, fonts, composition="
         return
 
     shown = text if text else placeholder
-    color = BUTTON_TEXT if text else STATUS_INFO
+    color = TEXT if text else STATUS_INFO
     text_surface = fonts["small"].render(trim_center_label(shown, 36), True, color)
     screen.blit(text_surface, (rect.x + 10, rect.y + 8))
 
@@ -479,11 +491,17 @@ def draw_start_screen(
         True,
         STATUS_INFO,
     )
+    intro_line3 = fonts["small"].render(
+        "准备好后，点击右侧绿色【Play Selected Maze】按钮开始游戏。",
+        True,
+        STATUS_INFO,
+    )
 
     screen.blit(title, (24, 22))
     screen.blit(subtitle, (24, 58))
     screen.blit(intro_line1, (24, 82))
     screen.blit(intro_line2, (24, 104))
+    screen.blit(intro_line3, (24, 126))
 
     pygame.draw.rect(screen, PANEL_ALT, layout.preview_panel, border_radius=18)
     pygame.draw.rect(screen, GRID, layout.preview_panel, width=2, border_radius=18)
@@ -563,7 +581,7 @@ def draw_start_screen(
     draw_button(screen, layout.buttons["cols_minus"], "-", layout.buttons["cols_minus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["cols_plus"], "+", layout.buttons["cols_plus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["generate"], "Generate Random Maze", layout.buttons["generate"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["play"], "Play Selected Maze", layout.buttons["play"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["play"], "Play Selected Maze", layout.buttons["play"].collidepoint(mouse_pos), fonts, highlight=True)
     draw_button(screen, layout.buttons["save_preview"], "Save Preview Maze", layout.buttons["save_preview"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["delete_saved"], "Delete Highlighted Maze", layout.buttons["delete_saved"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["close"], "Close", layout.buttons["close"].collidepoint(mouse_pos), fonts)
@@ -724,14 +742,14 @@ def build_victory_dialog_rects(width, height):
 
 def draw_victory_dialog(screen, fonts, width, height, elapsed_time, mouse_pos):
     overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-    overlay.fill((5, 10, 18, 190))
+    overlay.fill((30, 35, 45, 130))
     screen.blit(overlay, (0, 0))
 
     dialog, play_again, back_to_menu, close_game = build_victory_dialog_rects(width, height)
     pygame.draw.rect(screen, PANEL_ALT, dialog, border_radius=18)
     pygame.draw.rect(screen, GRID, dialog, width=2, border_radius=18)
 
-    title = fonts["title"].render("Goal Reached!", True, (255, 255, 120))
+    title = fonts["title"].render("Goal Reached!", True, ACCENT_HOVER)
     subtitle = fonts["body"].render(f"Time: {elapsed_time:0.2f}s", True, TEXT)
     tip = fonts["status"].render("Replay, go back to the menu, or close the game.", True, STATUS_INFO)
 
