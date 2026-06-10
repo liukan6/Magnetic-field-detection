@@ -496,11 +496,6 @@ def draw_start_screen(
         True,
         STATUS_INFO,
     )
-    intro_line3 = fonts["small"].render(
-        "准备好后，点击右侧绿色【Play Selected Maze】按钮开始游戏。",
-        True,
-        STATUS_INFO,
-    )
 
     screen.blit(title, (24, 22))
     screen.blit(subtitle, (24, 58))
@@ -587,11 +582,11 @@ def draw_start_screen(
     draw_button(screen, layout.buttons["rows_plus"], "+", layout.buttons["rows_plus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["cols_minus"], "-", layout.buttons["cols_minus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["cols_plus"], "+", layout.buttons["cols_plus"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["generate"], "Generate Random Maze", layout.buttons["generate"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["play"], "Play Selected Maze", layout.buttons["play"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["save_preview"], "Save Preview Maze", layout.buttons["save_preview"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["delete_saved"], "Delete Highlighted Maze", layout.buttons["delete_saved"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["close"], "Close", layout.buttons["close"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["generate"], "随机生成迷宫", layout.buttons["generate"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["play"], "开始游戏", layout.buttons["play"].collidepoint(mouse_pos), fonts, highlight=True)
+    draw_button(screen, layout.buttons["save_preview"], "保存当前预览", layout.buttons["save_preview"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["delete_saved"], "删除选中的迷宫", layout.buttons["delete_saved"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["close"], "关闭游戏", layout.buttons["close"].collidepoint(mouse_pos), fonts)
 
     if not saved_mazes:
         empty_text = fonts["small"].render("暂无保存的迷宫，可在预览中点击保存。", True, STATUS_INFO)
@@ -760,9 +755,9 @@ def draw_victory_dialog(screen, fonts, width, height, elapsed_time, mouse_pos):
     pygame.draw.rect(screen, PANEL_ALT, dialog, border_radius=18)
     pygame.draw.rect(screen, GRID, dialog, width=2, border_radius=18)
 
-    title = fonts["title"].render("Goal Reached!", True, (255, 255, 120))
-    subtitle = fonts["body"].render(f"Time: {elapsed_time:0.2f}s", True, TEXT)
-    tip = fonts["status"].render("Replay, go back to the menu, or close the game.", True, STATUS_INFO)
+    title = fonts["title"].render("到达终点！", True, ACCENT_HOVER)
+    subtitle = fonts["body"].render(f"用时：{elapsed_time:0.2f} 秒", True, TEXT)
+    tip = fonts["status"].render("可重玩本关、返回主菜单或关闭游戏。", True, STATUS_INFO)
 
     screen.blit(title, title.get_rect(center=(dialog.centerx, dialog.y + 60)))
     screen.blit(subtitle, subtitle.get_rect(center=(dialog.centerx, dialog.y + 118)))
