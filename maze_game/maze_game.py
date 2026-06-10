@@ -67,7 +67,7 @@ class MazeGameApp:
         self.screen = pygame.display.set_mode((self.width, self.height), self.display_flags)
         if hasattr(pygame.display, "set_window_minimum_size"):
             pygame.display.set_window_minimum_size(MIN_WIDTH, MIN_HEIGHT)
-        pygame.display.set_caption("Magnetic Maze Control")
+        pygame.display.set_caption("磁控迷宫小球")
         self.clock = pygame.time.Clock()
         self.fonts = init_fonts()
 
@@ -90,6 +90,8 @@ class MazeGameApp:
         self._last_click_pos = (0, 0)
         self._is_maximized = False
         self._pre_maximize_size = None
+        self._is_fullscreen = False
+        self._pre_fullscreen_size = None
 
         self.player_dropdown_open = False
 
@@ -99,10 +101,10 @@ class MazeGameApp:
             self.preview_maze = clone_maze(self.saved_mazes[0])
             self.rows_setting = self.preview_maze.rows
             self.cols_setting = self.preview_maze.cols
-            self.start_status = f"Loaded {self.preview_maze.name} as preview."
+            self.start_status = f"已加载预览：{self.preview_maze.name}。"
         else:
             self.preview_maze = create_random_maze(self.rows_setting, self.cols_setting)
-            self.start_status = "Preview ready. Adjust size or load a saved maze."
+            self.start_status = "预览已就绪。调整尺寸或加载已保存的迷宫。"
         self.player_name = "取消实验课学分折半计算制度!"
         self.text_input_mode = None
         self.text_input_buffer = ""
@@ -115,7 +117,7 @@ class MazeGameApp:
         self.goal_rect = None
         self.walls = []
         self.buttons, self.button_labels = build_game_buttons(self.width)
-        self.game_status = "Ready"
+        self.game_status = "就绪"
         self.game_status_color = STATUS_INFO
         self.ball_x = 0.0
         self.ball_y = 0.0
@@ -147,7 +149,7 @@ class MazeGameApp:
     def _sync_player_name_from_buffer(self):
         value = self.text_input_buffer.strip()
         self.player_name = value or "取消实验课学分折半计算制度!"
-        self.start_status = f"Player name set to {self.player_name}."
+        self.start_status = f"玩家姓名已设为：{self.player_name}。"
 
     def _leaderboard_total(self):
         if self.selected_saved_index is None or not self.saved_mazes:
@@ -202,7 +204,7 @@ class MazeGameApp:
 
         if self.text_input_mode == "maze_name":
             if self.selected_saved_index is None or not value:
-                self.start_status = "Maze rename cancelled."
+                self.start_status = "已取消重命名。"
             else:
                 self.saved_mazes, updated_maze = rename_maze_at(self.saved_mazes, self.selected_saved_index, value)
                 if updated_maze is not None:
@@ -210,7 +212,7 @@ class MazeGameApp:
                         self.preview_maze = clone_maze(updated_maze)
                     if self.current_maze is not None and self.current_maze.maze_id == updated_maze.maze_id:
                         self.current_maze = clone_maze(updated_maze)
-                    self.start_status = f"Renamed maze to {updated_maze.name}."
+                    self.start_status = f"已重命名为：{updated_maze.name}。"
         self.end_text_input()
 
     def ensure_serial_ready(self, calibration_duration):
@@ -320,13 +322,13 @@ class MazeGameApp:
         self.apply_current_maze(
             self.preview_maze,
             INITIAL_CALIBRATION_DURATION,
-            "Maze loaded and calibrated.",
+            "迷宫已加载并完成校准。",
         )
         self.mode = "game"
 
     def generate_preview(self):
         self.preview_maze = create_random_maze(self.rows_setting, self.cols_setting)
-        self.start_status = f"Generated a new {self.cols_setting} x {self.rows_setting} preview maze."
+        self.start_status = f"已生成 {self.cols_setting} × {self.rows_setting} 的新预览迷宫。"
 
     def save_preview_maze(self):
         self.saved_mazes, saved_maze = save_maze_copy(self.saved_mazes, self.preview_maze)
@@ -338,21 +340,21 @@ class MazeGameApp:
         self.leaderboard_scroll = 0
         self.selected_leaderboard_index = None
         self._clamp_saved_scroll()
-        self.start_status = f"Saved preview as {saved_maze.name}."
+        self.start_status = f"已保存预览：{saved_maze.name}。"
 
     def load_selected_saved_maze(self):
         if self.selected_saved_index is None or not self.saved_mazes:
-            self.start_status = "Select a saved maze first."
+            self.start_status = "请先选择一个已保存的迷宫。"
             return
 
         self.preview_maze = clone_maze(self.saved_mazes[self.selected_saved_index])
         self.rows_setting = self.preview_maze.rows
         self.cols_setting = self.preview_maze.cols
-        self.start_status = f"Loaded {self.preview_maze.name} into preview."
+        self.start_status = f"已加载到预览：{self.preview_maze.name}。"
 
     def delete_selected_saved_maze(self):
         if self.selected_saved_index is None or not self.saved_mazes:
-            self.start_status = "No saved maze selected."
+            self.start_status = "未选中迷宫。"
             return
 
         self.saved_mazes, deleted_name = delete_maze_at(self.saved_mazes, self.selected_saved_index)
@@ -360,17 +362,17 @@ class MazeGameApp:
         self.leaderboard_scroll = 0
         self.selected_leaderboard_index = None
         self._clamp_saved_scroll()
-        self.start_status = f"Deleted {deleted_name}."
+        self.start_status = f"已删除：{deleted_name}。"
 
     def delete_leaderboard_entry_at(self, entry_index):
         if self.selected_saved_index is None or not self.saved_mazes:
-            self.start_status = "Select a saved maze first."
+            self.start_status = "请先选择一个已保存的迷宫。"
             return
         selected_maze = self.saved_mazes[self.selected_saved_index]
         if not selected_maze.maze_id:
             return
         if entry_index is None or entry_index < 0 or entry_index >= len(selected_maze.leaderboard):
-            self.start_status = "Select a leaderboard record first."
+            self.start_status = "请先选择一条排行榜记录。"
             return
 
         removed = selected_maze.leaderboard[entry_index]
@@ -385,7 +387,7 @@ class MazeGameApp:
             self.current_maze = clone_maze(updated_maze)
         self.selected_leaderboard_index = None
         self._clamp_leaderboard_scroll()
-        self.start_status = f"Removed {removed['player']} {removed['time']:.2f}s from leaderboard."
+        self.start_status = f"已从排行榜删除：{removed['player']} {removed['time']:.2f}s。"
 
     def save_current_game_maze(self):
         self.saved_mazes, saved_maze = save_maze_copy(self.saved_mazes, self.current_maze)
@@ -395,17 +397,17 @@ class MazeGameApp:
             (index for index, maze in enumerate(self.saved_mazes) if maze.maze_id == saved_maze.maze_id),
             self.selected_saved_index,
         )
-        self.game_status = f"Saved current maze as {saved_maze.name}."
+        self.game_status = f"已保存当前迷宫：{saved_maze.name}。"
         self.game_status_color = STATUS_OK
 
     def generate_new_game_maze(self):
         maze = create_random_maze(self.current_maze.rows, self.current_maze.cols)
-        self.apply_current_maze(maze, QUICK_CALIBRATION_DURATION, "Random maze generated and calibrated.")
+        self.apply_current_maze(maze, QUICK_CALIBRATION_DURATION, "已生成随机迷宫并完成校准。")
 
     def recalibrate_current_signal(self):
         self.ensure_serial_ready(QUICK_CALIBRATION_DURATION)
         self.reset_motion_filters()
-        self.game_status = f"Recalibrated here: bx0={self.bx0:.1f}, by0={self.by0:.1f}"
+        self.game_status = f"已在此处重新校准：bx0={self.bx0:.1f}, by0={self.by0:.1f}"
         self.game_status_color = STATUS_OK
 
     def reset_ball_to_start(self):
@@ -415,7 +417,7 @@ class MazeGameApp:
         self.vy = 0.0
         self.reset_timer()
         self.win = False
-        self.game_status = "Ball reset to start."
+        self.game_status = "小球已重置到起点。"
         self.game_status_color = STATUS_INFO
 
     def return_to_start_menu(self):
@@ -428,7 +430,7 @@ class MazeGameApp:
                 (index for index, maze in enumerate(self.saved_mazes) if maze.maze_id == self.current_maze.maze_id),
                 self.selected_saved_index,
             )
-        self.start_status = "Returned to the setup screen with the current maze loaded."
+        self.start_status = "已返回主菜单，当前迷宫已加载。"
 
     def replay_current_maze(self):
         self.rebuild_game_geometry(preserve_motion=False)
@@ -436,12 +438,12 @@ class MazeGameApp:
         self.reset_motion_filters()
         self.reset_timer()
         self.win = False
-        self.game_status = "Replay started."
+        self.game_status = "重玩开始。"
         self.game_status_color = STATUS_OK
 
     def record_current_result(self):
         if self.current_maze is None or not self.current_maze.maze_id:
-            self.game_status = f"Finished in {self.elapsed_time:0.2f}s. Save this maze to enable leaderboard records."
+            self.game_status = f"完成！用时 {self.elapsed_time:0.2f}s。保存此迷宫即可记录排行榜。"
             self.game_status_color = STATUS_WARN
             return
 
@@ -470,7 +472,7 @@ class MazeGameApp:
                 (index for index, maze in enumerate(self.saved_mazes) if maze.maze_id == updated_maze.maze_id),
                 self.selected_saved_index,
             )
-            self.game_status = f"{player_name} finished in {self.elapsed_time:0.2f}s. Leaderboard updated."
+            self.game_status = f"{player_name} 完成用时 {self.elapsed_time:0.2f}s，排行榜已更新。"
             self.game_status_color = STATUS_OK
 
     def resize_window(self, new_width, new_height):
@@ -532,6 +534,21 @@ class MazeGameApp:
         self.screen = pygame.display.set_mode(target_size, self.display_flags)
         self.resize_window(target_size[0], target_size[1])
 
+    def toggle_fullscreen(self):
+        if self._is_fullscreen:
+            target_size = self._pre_fullscreen_size or (self.width, self.height)
+            self.screen = pygame.display.set_mode(target_size, self.display_flags)
+            self._is_fullscreen = False
+            self._pre_fullscreen_size = None
+            self.resize_window(target_size[0], target_size[1])
+        else:
+            self._pre_fullscreen_size = (self.width, self.height)
+            info = pygame.display.Info()
+            target_size = (info.current_w, info.current_h)
+            self.screen = pygame.display.set_mode(target_size, pygame.FULLSCREEN | pygame.DOUBLEBUF)
+            self._is_fullscreen = True
+            self.resize_window(target_size[0], target_size[1])
+
     def _click_hits_widget(self, pos):
         if self.mode == "start":
             layout = build_start_screen_layout(
@@ -582,7 +599,7 @@ class MazeGameApp:
                     if self.text_input_mode == "player_name":
                         self.end_text_input()
                     self.player_name = name
-                    self.start_status = f"Player name set to {self.player_name}."
+                    self.start_status = f"玩家姓名已设为：{self.player_name}。"
                     self.player_dropdown_open = False
                     return
             if not layout.buttons["player_name_dropdown"].collidepoint(mouse_pos):
@@ -600,7 +617,7 @@ class MazeGameApp:
         if self.selected_saved_index is not None and layout.buttons["maze_name"].collidepoint(mouse_pos):
             selected_maze = self.saved_mazes[self.selected_saved_index]
             self.begin_text_input("maze_name", selected_maze.name)
-            self.start_status = "Editing maze name. Press Enter to save."
+            self.start_status = "正在编辑迷宫名。按 Enter 保存。"
             return
 
         for index, rect in layout.saved_item_rects:
@@ -611,7 +628,7 @@ class MazeGameApp:
                 self.preview_maze = clone_maze(self.saved_mazes[index])
                 self.rows_setting = self.preview_maze.rows
                 self.cols_setting = self.preview_maze.cols
-                self.start_status = f"Loaded {self.preview_maze.name} into preview."
+                self.start_status = f"已加载到预览：{self.preview_maze.name}。"
                 return
 
         for absolute_index, rect in layout.leaderboard_item_rects:
@@ -625,16 +642,16 @@ class MazeGameApp:
             self.begin_text_input("player_name", self.player_name)
         elif buttons["rows_minus"].collidepoint(mouse_pos):
             self.rows_setting = max(self.rows_setting - 1, MIN_MAZE_ROWS)
-            self.start_status = f"Rows set to {self.rows_setting}. Generate a new maze to apply it."
+            self.start_status = f"行数：{self.rows_setting}。生成新迷宫即可应用。"
         elif buttons["rows_plus"].collidepoint(mouse_pos):
             self.rows_setting = min(self.rows_setting + 1, MAX_MAZE_ROWS)
-            self.start_status = f"Rows set to {self.rows_setting}. Generate a new maze to apply it."
+            self.start_status = f"行数：{self.rows_setting}。生成新迷宫即可应用。"
         elif buttons["cols_minus"].collidepoint(mouse_pos):
             self.cols_setting = max(self.cols_setting - 1, MIN_MAZE_COLS)
-            self.start_status = f"Cols set to {self.cols_setting}. Generate a new maze to apply it."
+            self.start_status = f"列数：{self.cols_setting}。生成新迷宫即可应用。"
         elif buttons["cols_plus"].collidepoint(mouse_pos):
             self.cols_setting = min(self.cols_setting + 1, MAX_MAZE_COLS)
-            self.start_status = f"Cols set to {self.cols_setting}. Generate a new maze to apply it."
+            self.start_status = f"列数：{self.cols_setting}。生成新迷宫即可应用。"
         elif buttons["generate"].collidepoint(mouse_pos):
             self.generate_preview()
         elif buttons["play"].collidepoint(mouse_pos):
@@ -716,10 +733,10 @@ class MazeGameApp:
                     elif event.key == pygame.K_ESCAPE:
                         if self.text_input_mode == "player_name":
                             self.end_text_input()
-                            self.start_status = f"Player name set to {self.player_name}."
+                            self.start_status = f"玩家姓名已设为：{self.player_name}。"
                         else:
                             self.end_text_input()
-                            self.start_status = "Text edit cancelled."
+                            self.start_status = "已取消文本编辑。"
                     elif event.key == pygame.K_BACKSPACE:
                         self.text_input_buffer = self.text_input_buffer[:-1]
                         self.ime_preview_text = ""
@@ -731,7 +748,7 @@ class MazeGameApp:
                     if event.key == pygame.K_F2 and self.selected_saved_index is not None:
                         selected_maze = self.saved_mazes[self.selected_saved_index]
                         self.begin_text_input("maze_name", selected_maze.name)
-                        self.start_status = "Editing maze name. Press Enter to save."
+                        self.start_status = "正在编辑迷宫名。按 Enter 保存。"
                     elif event.key == pygame.K_RETURN:
                         self.start_game()
                     elif event.key == pygame.K_g:
@@ -760,7 +777,7 @@ class MazeGameApp:
                             self.mode = "start"
                             self.preview_maze = clone_maze(self.current_maze)
                             self.begin_text_input("maze_name", self.current_maze.name)
-                            self.start_status = "Editing current saved maze name. Press Enter to save."
+                            self.start_status = "正在编辑当前迷宫名。按 Enter 保存。"
                     elif event.key == pygame.K_r:
                         self.generate_new_game_maze()
                     elif event.key == pygame.K_c:
@@ -793,7 +810,7 @@ class MazeGameApp:
                 else:
                     self.handle_game_click(event.pos)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                self.toggle_maximize()
+                self.toggle_fullscreen()
             elif event.type == pygame.MOUSEWHEEL:
                 if self.mode == "start":
                     self.handle_start_scroll(event.y)
@@ -834,7 +851,7 @@ class MazeGameApp:
         if not self.timer_started and (abs(target_vx) > 1e-6 or abs(target_vy) > 1e-6):
             self.timer_started = True
             self.timer_start_time = time.time()
-            self.game_status = "Timer started."
+            self.game_status = "开始计时。"
             self.game_status_color = STATUS_WARN
 
         self.vx = self.vx * VELOCITY_DAMPING + target_vx * VELOCITY_BLEND

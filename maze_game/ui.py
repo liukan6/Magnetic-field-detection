@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import pygame
 
 from config import (
+    ACCENT,
+    ACCENT_HOVER,
     BALL,
     BALL_RADIUS,
     BG,
@@ -73,12 +75,12 @@ def build_game_buttons(width):
     gap = 10
     names = ["menu", "save_maze", "new_maze", "recalibrate", "reset_ball"]
     labels = {
-        "menu": "Start Menu",
-        "save_maze": "Save Maze",
-        "new_maze": "New Maze",
-        "recalibrate": "Recalibrate",
-        "reset_ball": "Reset Ball",
-        "close": "Close",
+        "menu": "返回主菜单",
+        "save_maze": "保存当前迷宫",
+        "new_maze": "随机新迷宫",
+        "recalibrate": "重新校准",
+        "reset_ball": "重置小球",
+        "close": "关闭游戏",
     }
 
     rects = {}
@@ -95,7 +97,7 @@ def build_game_buttons(width):
 
 
 def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leaderboard_total=0, leaderboard_scroll=0):
-    panel_top = 130
+    panel_top = 152
     outer_margin = 24
     panel_gap = 16
     preview_width = int(width * 0.52)
@@ -106,7 +108,7 @@ def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leader
 
     size_panel = pygame.Rect(sidebar_x, panel_top, sidebar_width, 152)
     player_panel = pygame.Rect(sidebar_x, size_panel.bottom + 14, sidebar_width, 90)
-    action_panel = pygame.Rect(sidebar_x, player_panel.bottom + 14, sidebar_width, 190)
+    action_panel = pygame.Rect(sidebar_x, player_panel.bottom + 14, sidebar_width, 204)
 
     lower_top = max(preview_panel.bottom, action_panel.bottom) + panel_gap
     lower_height = max(height - lower_top - 46, 220)
@@ -117,10 +119,10 @@ def build_start_screen_layout(width, height, saved_count, saved_scroll=0, leader
     leaderboard_panel = pygame.Rect(saved_panel.right + panel_gap, lower_top, lower_width - column_width - panel_gap, lower_height)
 
     buttons = {
-        "rows_minus": pygame.Rect(size_panel.x + 24, size_panel.y + 84, 44, 34),
-        "rows_plus": pygame.Rect(size_panel.x + 214, size_panel.y + 84, 44, 34),
-        "cols_minus": pygame.Rect(size_panel.x + 24, size_panel.y + 122, 44, 34),
-        "cols_plus": pygame.Rect(size_panel.x + 214, size_panel.y + 122, 44, 34),
+        "rows_minus": pygame.Rect(size_panel.x + 20, size_panel.y + 50, 44, 34),
+        "rows_plus": pygame.Rect(size_panel.right - 64, size_panel.y + 50, 44, 34),
+        "cols_minus": pygame.Rect(size_panel.x + 20, size_panel.y + 96, 44, 34),
+        "cols_plus": pygame.Rect(size_panel.right - 64, size_panel.y + 96, 44, 34),
         "player_name": pygame.Rect(player_panel.x + 20, player_panel.y + 42, sidebar_width - 40 - 42, 34),
         "player_name_dropdown": pygame.Rect(player_panel.x + 20 + sidebar_width - 40 - 36, player_panel.y + 42, 36, 34),
         "generate": pygame.Rect(action_panel.x + 20, action_panel.y + 54, sidebar_width - 40, 40),
@@ -311,10 +313,20 @@ def trim_center_label(text, max_length=34):
     return text[: max_length - 3] + "..."
 
 
-def draw_button(screen, rect, label, hovered, fonts):
-    color = BUTTON_HOVER if hovered else BUTTON
+def draw_button(screen, rect, label, hovered, fonts, highlight=False):
+    if highlight:
+        color = ACCENT_HOVER if hovered else ACCENT
+        text_color = BUTTON_TEXT
+        border_color = ACCENT_HOVER
+        border_width = 2
+    else:
+        color = BUTTON_HOVER if hovered else BUTTON
+        text_color = BUTTON_TEXT if hovered else TEXT
+        border_color = GRID
+        border_width = 1
     pygame.draw.rect(screen, color, rect, border_radius=10)
-    text_surface = fonts["button"].render(label, True, BUTTON_TEXT)
+    pygame.draw.rect(screen, border_color, rect, width=border_width, border_radius=10)
+    text_surface = fonts["button"].render(label, True, text_color)
     text_rect = text_surface.get_rect(center=rect.center)
     screen.blit(text_surface, text_rect)
 
@@ -347,7 +359,7 @@ def draw_input_box(screen, rect, text, active, placeholder, fonts, composition="
         return
 
     shown = text if text else placeholder
-    color = BUTTON_TEXT if text else STATUS_INFO
+    color = TEXT if text else STATUS_INFO
     text_surface = fonts["small"].render(trim_center_label(shown, 36), True, color)
     screen.blit(text_surface, (rect.x + 10, rect.y + 8))
 
@@ -395,7 +407,7 @@ def draw_data_panel(screen, fonts, width, bx_filtered, by_filtered, bx0, by0, st
     pygame.draw.rect(screen, PANEL_ALT, panel_rect, border_radius=14)
     pygame.draw.rect(screen, GRID, panel_rect, width=2, border_radius=14)
 
-    title = fonts["status"].render("Monitoring", True, TEXT)
+    title = fonts["status"].render("传感器监测", True, TEXT)
     info1 = fonts["mono"].render(f"Bx = {bx_filtered:.0f}", True, TEXT)
     info2 = fonts["mono"].render(f"By = {by_filtered:.0f}", True, TEXT)
     info3 = fonts["mono"].render(
@@ -406,11 +418,11 @@ def draw_data_panel(screen, fonts, width, bx_filtered, by_filtered, bx0, by0, st
     info4 = fonts["mono"].render(f"baseline = ({bx0:.0f}, {by0:.0f})", True, TEXT)
 
     if timer_started:
-        timer_text = f"timer = {elapsed_time:0.2f}s"
+        timer_text = f"用时 = {elapsed_time:0.2f}s"
     else:
-        timer_text = "timer = waiting for movement"
+        timer_text = "用时 = 等待开始移动"
 
-    info5 = fonts["mono"].render(timer_text, True, TEXT)
+    info5 = fonts["status"].render(timer_text, True, TEXT)
     status_surface = fonts["status"].render(status_message, True, status_color)
 
     screen.blit(title, (panel_rect.x + 16, panel_rect.y + 10))
@@ -462,9 +474,9 @@ def draw_start_screen(
         leaderboard_scroll=leaderboard_scroll,
     )
 
-    title = fonts["title"].render("Magnetic Maze Setup", True, TEXT)
+    title = fonts["title"].render("磁控迷宫小球", True, TEXT)
     subtitle = fonts["status"].render(
-        "Choose a size, set player name, generate or reuse a maze, and check the leaderboard.",
+        "选择迷宫尺寸、设置玩家姓名，生成或加载迷宫，并查看排行榜。",
         True,
         STATUS_INFO,
     )
@@ -475,7 +487,12 @@ def draw_start_screen(
         STATUS_INFO,
     )
     intro_line2 = fonts["small"].render(
-        "输入玩家姓名，每个迷宫会记录你的最佳成绩到排行榜。点击 Saved Mazes 中的迷宫即可加载。",
+        "输入玩家姓名，每个迷宫会记录你的最佳成绩到排行榜。点击【已保存的迷宫】中的迷宫即可加载。",
+        True,
+        STATUS_INFO,
+    )
+    intro_line3 = fonts["small"].render(
+        "准备好后，点击右侧绿色【开始游戏】按钮进入游戏。",
         True,
         STATUS_INFO,
     )
@@ -484,6 +501,7 @@ def draw_start_screen(
     screen.blit(subtitle, (24, 58))
     screen.blit(intro_line1, (24, 82))
     screen.blit(intro_line2, (24, 104))
+    screen.blit(intro_line3, (24, 126))
 
     pygame.draw.rect(screen, PANEL_ALT, layout.preview_panel, border_radius=18)
     pygame.draw.rect(screen, GRID, layout.preview_panel, width=2, border_radius=18)
@@ -498,14 +516,14 @@ def draw_start_screen(
     pygame.draw.rect(screen, PANEL_ALT, layout.leaderboard_panel, border_radius=18)
     pygame.draw.rect(screen, GRID, layout.leaderboard_panel, width=2, border_radius=18)
 
-    preview_title = fonts["body"].render("Preview Maze", True, TEXT)
-    size_title = fonts["body"].render("Maze Size", True, TEXT)
-    player_title = fonts["body"].render("Player Name", True, TEXT)
-    action_title = fonts["body"].render("Actions", True, TEXT)
-    saved_title = fonts["body"].render("Saved Mazes", True, TEXT)
-    leaderboard_title = fonts["body"].render("Leaderboard", True, TEXT)
+    preview_title = fonts["body"].render("迷宫预览", True, TEXT)
+    size_title = fonts["body"].render("迷宫尺寸", True, TEXT)
+    player_title = fonts["body"].render("玩家姓名", True, TEXT)
+    action_title = fonts["body"].render("操作", True, TEXT)
+    saved_title = fonts["body"].render("已保存的迷宫", True, TEXT)
+    leaderboard_title = fonts["body"].render("排行榜", True, TEXT)
     preview_info = fonts["small"].render(
-        f"{preview_maze.cols} cols x {preview_maze.rows} rows",
+        f"{preview_maze.cols} 列 × {preview_maze.rows} 行",
         True,
         STATUS_INFO,
     )
@@ -523,7 +541,7 @@ def draw_start_screen(
         layout.buttons["player_name"],
         player_name,
         editing_player_name,
-        original_input_value if editing_player_name else "Click here to enter player name",
+        original_input_value if editing_player_name else "点击此处输入玩家姓名",
         fonts,
         ime_preview_text if editing_player_name else "",
     )
@@ -537,9 +555,9 @@ def draw_start_screen(
     arrow_surface = fonts["small"].render(arrow_glyph, True, BUTTON_TEXT)
     screen.blit(arrow_surface, arrow_surface.get_rect(center=dropdown_btn.center))
     if editing_player_name:
-        player_hint_text = "Typing is saved automatically. Press Esc or click away to finish."
+        player_hint_text = "输入即时保存。按 Esc 或点击其他位置完成。"
     else:
-        player_hint_text = "A saved maze records your time under this player name."
+        player_hint_text = "完成迷宫后会以此姓名记录最佳成绩。"
     player_hint = fonts["small"].render(player_hint_text, True, STATUS_INFO)
     screen.blit(player_hint, (layout.player_panel.x + 20, layout.player_panel.y + 48 + 38))
 
@@ -553,23 +571,25 @@ def draw_start_screen(
     start_center = cell_center(preview_maze.start, preview_viewport)
     pygame.draw.circle(screen, BALL, (int(start_center[0]), int(start_center[1])), max(preview_viewport.cell_size // 5, 8))
 
-    rows_text = fonts["body"].render(f"Rows: {rows_setting}", True, TEXT)
-    cols_text = fonts["body"].render(f"Cols: {cols_setting}", True, TEXT)
-    screen.blit(rows_text, (layout.size_panel.x + 84, layout.size_panel.y + 86))
-    screen.blit(cols_text, (layout.size_panel.x + 84, layout.size_panel.y + 124))
+    rows_text = fonts["body"].render(f"行数: {rows_setting}", True, TEXT)
+    cols_text = fonts["body"].render(f"列数: {cols_setting}", True, TEXT)
+    rows_rect = rows_text.get_rect(center=(layout.size_panel.centerx, layout.size_panel.y + 50 + 17))
+    cols_rect = cols_text.get_rect(center=(layout.size_panel.centerx, layout.size_panel.y + 96 + 17))
+    screen.blit(rows_text, rows_rect)
+    screen.blit(cols_text, cols_rect)
 
     draw_button(screen, layout.buttons["rows_minus"], "-", layout.buttons["rows_minus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["rows_plus"], "+", layout.buttons["rows_plus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["cols_minus"], "-", layout.buttons["cols_minus"].collidepoint(mouse_pos), fonts)
     draw_button(screen, layout.buttons["cols_plus"], "+", layout.buttons["cols_plus"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["generate"], "Generate Random Maze", layout.buttons["generate"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["play"], "Play Selected Maze", layout.buttons["play"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["save_preview"], "Save Preview Maze", layout.buttons["save_preview"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["delete_saved"], "Delete Highlighted Maze", layout.buttons["delete_saved"].collidepoint(mouse_pos), fonts)
-    draw_button(screen, layout.buttons["close"], "Close", layout.buttons["close"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["generate"], "随机生成迷宫", layout.buttons["generate"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["play"], "开始游戏", layout.buttons["play"].collidepoint(mouse_pos), fonts, highlight=True)
+    draw_button(screen, layout.buttons["save_preview"], "保存当前预览", layout.buttons["save_preview"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["delete_saved"], "删除选中的迷宫", layout.buttons["delete_saved"].collidepoint(mouse_pos), fonts)
+    draw_button(screen, layout.buttons["close"], "关闭游戏", layout.buttons["close"].collidepoint(mouse_pos), fonts)
 
     if not saved_mazes:
-        empty_text = fonts["small"].render("No saved mazes yet. Save one from the preview or gameplay.", True, STATUS_INFO)
+        empty_text = fonts["small"].render("暂无保存的迷宫，可在预览中点击保存。", True, STATUS_INFO)
         screen.blit(empty_text, (layout.saved_panel.x + 18, layout.saved_panel.y + 58))
     else:
         for index, rect in layout.saved_item_rects:
@@ -579,7 +599,11 @@ def draw_start_screen(
             pygame.draw.rect(screen, fill, rect, border_radius=10)
             label = trim_label(maze.name or f"maze_{maze.cols}x{maze.rows}")
             text_surface = fonts["small"].render(label, True, BUTTON_TEXT if is_selected else TEXT)
-            meta_surface = fonts["small"].render(f"{maze.cols}x{maze.rows}", True, STATUS_INFO)
+            meta_surface = fonts["small"].render(
+                f"{maze.cols}x{maze.rows}",
+                True,
+                BUTTON_TEXT if is_selected else STATUS_INFO,
+            )
             screen.blit(text_surface, (rect.x + 10, rect.y + 7))
             screen.blit(meta_surface, (rect.right - 70, rect.y + 7))
 
@@ -590,30 +614,30 @@ def draw_start_screen(
                 pygame.draw.rect(screen, BUTTON_HOVER, layout.saved_thumb, border_radius=4)
 
     if selected_maze is None:
-        leaderboard_empty = fonts["small"].render("Select a saved maze to see its best times.", True, STATUS_INFO)
-        rename_hint = fonts["small"].render("Tip: press F2 to rename the selected saved maze.", True, STATUS_INFO)
+        leaderboard_empty = fonts["small"].render("选择一个保存的迷宫以查看最佳成绩。", True, STATUS_INFO)
+        rename_hint = fonts["small"].render("提示：按 F2 可重命名选中的迷宫。", True, STATUS_INFO)
         screen.blit(leaderboard_empty, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 56))
         screen.blit(rename_hint, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 88))
     else:
         if editing_maze_name:
-            meta_text = f"Enter confirm   Esc cancel   size {selected_maze.cols}x{selected_maze.rows}"
+            meta_text = f"Enter 确认   Esc 取消   尺寸 {selected_maze.cols}×{selected_maze.rows}"
         else:
-            meta_text = f"F2 rename   size {selected_maze.cols}x{selected_maze.rows}"
+            meta_text = f"按 F2 重命名   尺寸 {selected_maze.cols}×{selected_maze.rows}"
         selected_meta = fonts["small"].render(meta_text, True, STATUS_INFO)
         draw_input_box(
             screen,
             layout.buttons["maze_name"],
             maze_name_text if editing_maze_name else selected_maze.name,
             editing_maze_name,
-            original_input_value if editing_maze_name else "Maze name",
+            original_input_value if editing_maze_name else "迷宫名称",
             fonts,
             ime_preview_text if editing_maze_name else "",
         )
         screen.blit(selected_meta, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 90))
 
         if not selected_maze.leaderboard:
-            no_record = fonts["small"].render("No records yet for this maze.", True, STATUS_INFO)
-            record_tip = fonts["small"].render("Play this saved maze to add a score.", True, STATUS_INFO)
+            no_record = fonts["small"].render("此迷宫还没有任何成绩。", True, STATUS_INFO)
+            record_tip = fonts["small"].render("玩一局即可上榜。", True, STATUS_INFO)
             screen.blit(no_record, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 126))
             screen.blit(record_tip, (layout.leaderboard_panel.x + 18, layout.leaderboard_panel.y + 156))
         else:
@@ -641,7 +665,7 @@ def draw_start_screen(
         draw_button(
             screen,
             layout.buttons["delete_record"],
-            "Delete Selected Record",
+            "删除选中的记录",
             layout.buttons["delete_record"].collidepoint(mouse_pos),
             fonts,
         )
@@ -708,7 +732,7 @@ def draw_game_screen(screen, fonts, width, height, buttons, labels, maze, viewpo
     )
 
     walls = draw_maze(screen, maze, viewport, goal_rect, trail, ball_pos)
-    size_text = fonts["status"].render(f"maze size: {maze.cols} x {maze.rows}", True, STATUS_INFO)
+    size_text = fonts["status"].render(f"迷宫尺寸：{maze.cols} × {maze.rows}", True, STATUS_INFO)
     screen.blit(size_text, (viewport.left, viewport.top - 34))
     return walls
 
@@ -724,22 +748,22 @@ def build_victory_dialog_rects(width, height):
 
 def draw_victory_dialog(screen, fonts, width, height, elapsed_time, mouse_pos):
     overlay = pygame.Surface((width, height), pygame.SRCALPHA)
-    overlay.fill((5, 10, 18, 190))
+    overlay.fill((30, 35, 45, 130))
     screen.blit(overlay, (0, 0))
 
     dialog, play_again, back_to_menu, close_game = build_victory_dialog_rects(width, height)
     pygame.draw.rect(screen, PANEL_ALT, dialog, border_radius=18)
     pygame.draw.rect(screen, GRID, dialog, width=2, border_radius=18)
 
-    title = fonts["title"].render("Goal Reached!", True, (255, 255, 120))
-    subtitle = fonts["body"].render(f"Time: {elapsed_time:0.2f}s", True, TEXT)
-    tip = fonts["status"].render("Replay, go back to the menu, or close the game.", True, STATUS_INFO)
+    title = fonts["title"].render("到达终点！", True, ACCENT_HOVER)
+    subtitle = fonts["body"].render(f"用时：{elapsed_time:0.2f} 秒", True, TEXT)
+    tip = fonts["status"].render("可重玩本关、返回主菜单或关闭游戏。", True, STATUS_INFO)
 
     screen.blit(title, title.get_rect(center=(dialog.centerx, dialog.y + 60)))
     screen.blit(subtitle, subtitle.get_rect(center=(dialog.centerx, dialog.y + 118)))
     screen.blit(tip, tip.get_rect(center=(dialog.centerx, dialog.y + 158)))
 
-    draw_button(screen, play_again, "Play Again", play_again.collidepoint(mouse_pos), fonts)
-    draw_button(screen, back_to_menu, "Back to Menu", back_to_menu.collidepoint(mouse_pos), fonts)
-    draw_button(screen, close_game, "Close", close_game.collidepoint(mouse_pos), fonts)
+    draw_button(screen, play_again, "再玩一次", play_again.collidepoint(mouse_pos), fonts)
+    draw_button(screen, back_to_menu, "返回主菜单", back_to_menu.collidepoint(mouse_pos), fonts)
+    draw_button(screen, close_game, "关闭游戏", close_game.collidepoint(mouse_pos), fonts)
     return dialog, play_again, back_to_menu, close_game
